@@ -18,7 +18,7 @@ from classifier import classify
 PARAMETERS = dict(
     training_phase_n=25,
     training_phase_sleep=30,
-    testing_phase_n=200,
+    testing_phase_n=100,
     intervention_phase_n=15
 )
 
@@ -272,7 +272,7 @@ def testing(device):
     try:
         restart_app(device)
         testing_phase1_data = []
-        for ind in range(PARAMETERS["testing_phase_n"]):
+        for ind in tqdm(range(PARAMETERS["testing_phase_n"])):
             # check for any flow disruptions first
             util.check_disruptions(device)
             
@@ -308,7 +308,7 @@ def testing(device):
 
     return testing_phase1_data
 
-def Intervention(device,query, intervention):
+def Not_Interested(device,query, intervention):
     try:
         if intervention=="Not_Interested":
             pass 
@@ -372,13 +372,258 @@ def Intervention(device,query, intervention):
 
     return intervention_data
 
+def Unfollow(device,query, intervention):
+    try:
+        if intervention=="Unfollow":
+            pass 
+        
+        restart_app(device)
+
+        intervention_data = []
+
+                        
+        
+
+        # press on hide to hide content
+        try: util.tap_on(device, {'text': 'Profile'})
+        except: pass
+        
+        try: 
+            util.tap_on(device, {'text': 'Following'})
+            sleep(0.5)
+        except Exception as e:
+            print(e)
+            pass
+
+        while True:
+            try:
+                elem = device.find_elements(attrs={'text': 'Following'}, xml=None)
+                print(len(elem))
+                if not elem:
+                    break
+                for items in elem:
+                    print(items)
+                    if items["index"]=="2":
+                        print("Here")
+                        coords = device.get_coordinates(items)
+                        device.tap(coords)
+                util.swipe_up(device)
+            except Exception as e:
+                print(e)
+
+    except Exception as e:
+        if e == "'NoneType' object is not subscriptable":
+            restart_app(device)
+
+    return intervention_data
+
+def Unfollow_Not_Interested(device,query, intervention):
+    try:
+        if intervention=="Unfollow_Not_Interested":
+            pass 
+        
+        restart_app(device)
+
+        # press on hide to hide content
+        try: util.tap_on(device, {'text': 'Profile'})
+        except: pass
+        
+        try: 
+            util.tap_on(device, {'text': 'Following'})
+            sleep(0.5)
+        except Exception as e:
+            print(e)
+            pass
+
+        while True:
+            try:
+                elem = device.find_elements(attrs={'text': 'Following'}, xml=None)
+                print(len(elem))
+                if not elem:
+                    break
+                for items in elem:
+                    print(items)
+                    if items["index"]=="2":
+                        print("Here")
+                        coords = device.get_coordinates(items)
+                        device.tap(coords)
+                util.swipe_up(device)
+            except Exception as e:
+                print(e)
+
+        restart_app(device)
+
+        intervention_data = []
+        count = 0
+        
+        while count <= PARAMETERS["intervention_phase_n"]:
+            # check for any flow disruptions first
+            util.check_disruptions(device)
+            
+            # watch short for a certain time
+            sleep(1)
+
+            # pause video
+            util.play_pause(device)
+
+            # click on see more to reveal content
+            try: util.tap_on(device, {'text': 'See more'})
+            except: pass
+
+            # grab xml
+            text_elems = device.find_elements({'text': re.compile('.+')})
+
+            # build row
+            row = {}
+
+            for el in text_elems:
+
+                row[el['resource-id']] = el['text']
+                
+                # like video if it contains the query needed
+                if el['resource-id']=='com.ss.android.ugc.trill:id/bc5':
+                    text = el['text']
+
+                    if classify(query, text):
+                        count += 1
+                        row['Intervened'] = True
+                        row['Intervention'] = intervention
+
+                        #longtap
+                        device.longtap()
+
+                        # click on Not intereseted
+                        util.tap_on(device, {'text': 'Not interested'})
+                        sleep(1)
+                        
+            # append to training data
+            intervention_data.append(row)
+
+            # press on hide to hide content
+            try: util.tap_on(device, {'text': 'Hide'})
+            except: pass
+
+            # swipe to next
+            util.swipe_up(device)
+
+    except Exception as e:
+        if e == "'NoneType' object is not subscriptable":
+            restart_app(device)
+
+    return intervention_data
+
+def Not_Interested_Unfollow(device,query, intervention):
+    try:
+        if intervention=="Not_Interested_Unfollow":
+            pass 
+        
+        restart_app(device)
+        intervention_data = []
+        count = 0
+        
+        while count <= PARAMETERS["intervention_phase_n"]:
+            # check for any flow disruptions first
+            util.check_disruptions(device)
+            
+            # watch short for a certain time
+            sleep(1)
+
+            # pause video
+            util.play_pause(device)
+
+            # click on see more to reveal content
+            try: util.tap_on(device, {'text': 'See more'})
+            except: pass
+
+            # grab xml
+            text_elems = device.find_elements({'text': re.compile('.+')})
+
+            # build row
+            row = {}
+
+            for el in text_elems:
+
+                row[el['resource-id']] = el['text']
+                
+                # like video if it contains the query needed
+                if el['resource-id']=='com.ss.android.ugc.trill:id/bc5':
+                    text = el['text']
+
+                    if classify(query, text):
+                        count += 1
+                        row['Intervened'] = True
+                        row['Intervention'] = intervention
+
+                        #longtap
+                        device.longtap()
+
+                        # click on Not intereseted
+                        util.tap_on(device, {'text': 'Not interested'})
+                        sleep(1)
+                        
+            # append to training data
+            intervention_data.append(row)
+
+            # press on hide to hide content
+            try: util.tap_on(device, {'text': 'Hide'})
+            except: pass
+
+            # swipe to next
+            util.swipe_up(device)
+
+        restart_app(device)
+
+        intervention_data = []
+
+                        
+        
+
+        # press on hide to hide content
+        try: util.tap_on(device, {'text': 'Profile'})
+        except: pass
+        
+        try: 
+            util.tap_on(device, {'text': 'Following'})
+            sleep(0.5)
+        except Exception as e:
+            print(e)
+            pass
+
+        while True:
+            try:
+                elem = device.find_elements(attrs={'text': 'Following'}, xml=None)
+                print(len(elem))
+                if not elem:
+                    break
+                for items in elem:
+                    print(items)
+                    if items["index"]=="2":
+                        print("Here")
+                        coords = device.get_coordinates(items)
+                        device.tap(coords)
+                util.swipe_up(device)
+            except Exception as e:
+                print(e)
+        
+    except Exception as e:
+        if e == "'NoneType' object is not subscriptable":
+            restart_app(device)
+
+    return intervention_data
+
+def Control():
+    pass
+        
+
+    
+
 
 if __name__ == '__main__':
     args = parse_args()
     
-    print("Generating credentials...")
-    # credentials = generate_credentials(args.q)
-    credentials = generate_credentials(None)
+    # print("Generating credentials...")
+    # # credentials = generate_credentials(args.q)
+    # credentials = generate_credentials(None)
     #credentials.name=credentials.name + "big_run"
     # print(credentials.name)
     # with open(f'credentials/{credentials.name}', 'w') as f:
@@ -393,54 +638,77 @@ if __name__ == '__main__':
 
     try:
         print("Installing APKs...")
-        install_apks(device)
+        #install_apks(device)
 
         print("Configuring keyboard...")
         configure_keyboard(device)
         
-        # print("Starting TikTok...")
-        # restart_app(device)
+        print("Starting TikTok...")
+        restart_app(device)
         
         # try:
         # print("Signing up...")
         # signup_controller(device, credentials)
 
-        # with open('accounts.txt', 'a') as f:
-        #     f.write('\n%s,%s' % (credentials.email, credentials.password))
+    #     # with open('accounts.txt', 'a') as f:
+    #     #     f.write('\n%s,%s' % (credentials.email, credentials.password))
 
-        # print("Logging in")
-        # login_controller(device, credentials)
+    #     # print("Logging in")
+    #     # login_controller(device, credentials)
 
-        # print("Training Phase 1...", util.timestamp())
-        # training_data_phase1 = training_phase_1(device, args.q)
+    #     # print("Training Phase 1...", util.timestamp())
+    #     # training_data_phase1 = training_phase_1(device, args.q)
 
-        print("Training Phase 2...", util.timestamp())
-        training_phase_2_data = training_phase_2(device, args.q)
+    #     print("Training Phase 2...", util.timestamp())
+    #     training_phase_2_data = training_phase_2(device, args.q)
         
-        print("Testing Phase 1...", util.timestamp())
-        testing_phase_1_data = testing(device)
+        # print("Testing Phase 1...", util.timestamp())
+        # testing_phase_1_data = testing(device)
 
-        print("Saving...", util.timestamp())
-        # pd.DataFrame(training_data_phase1).to_csv(f'training_phase_1/{credentials.name}_big.csv', index=False)
-        pd.DataFrame(training_phase_2_data).to_csv(f'training_phase_2/{args.q}_{credentials.name}.csv', index=False)
-        pd.DataFrame(testing_phase_1_data).to_csv(f'testing_phase_1/{args.q}_{credentials.name}.csv', index=False)
+    #     print("Saving...", util.timestamp())
+    #     # pd.DataFrame(training_data_phase1).to_csv(f'training_phase_1/{credentials.name}_big.csv', index=False)
+    #     pd.DataFrame(training_phase_2_data).to_csv(f'training_phase_2/{args.q}_{credentials.name}.csv', index=False)
+        # pd.DataFrame(testing_phase_1_data).to_csv(f'testing_phase_1/tiktok_karaabrownn.csv', index=False)
         
-        print("Intervention...", util.timestamp())
-        intervention_data = Intervention(device,args.q, args.i)
+        if args.i == "Not_Interested":
+            pass
+    #     print("Not Interested Only Intervention...", util.timestamp())
+    #     intervention_data = Not_Interested(device,args.q, args.i)
+        # pd.DataFrame(intervention_data).to_csv(f'intervention/{args.q}_{credentials.name}.csv', index=False)
         
-        print("Testing Phase 2... ", util.timestamp())
-        testing_phase_2_data = testing(device)
+        elif args.i == "Unfollow":
+            print("Unfollow Only Intervention...", util.timestamp())
+            intervention_data = Unfollow(device,args.q, args.i)
+            pd.DataFrame(intervention_data).to_csv(f'intervention/{args.q}.csv', index=False)
 
-        print("Saving...")
-        pd.DataFrame(intervention_data).to_csv(f'intervention/{args.q}_{credentials.name}.csv', index=False)
-        pd.DataFrame(testing_phase_2_data).to_csv(f'testing_phase_2/{args.q}_{credentials.name}.csv', index=False)
+        # elif args.i == "Unfollow_Not_Interested":
+    #     print("Unfollow then Not Interested Intervention...", util.timestamp())
+    #     intervention_data = Unfollow_Not_Interested(device,args.q, args.i)
+        # pd.DataFrame(intervention_data).to_csv(f'intervention/{args.q}_{credentials.name}.csv', index=False)
 
-        device.kill_app('com.ss.android.ugc.trill')
-        device.type_text(26)
+        # elif args.i == "Not_Interested_Unfollow":
+    #     print("Not Interested then Unfollow Intervention...", util.timestamp())
+    #     intervention_data = Not_Interested_Unfollow(device,args.q, args.i)
+        # pd.DataFrame(intervention_data).to_csv(f'intervention/{args.q}_{credentials.name}.csv', index=False)
+
+        # elif args.i == "Control":
+        #     pass
+
+
+        
+    #     print("Testing Phase 2... ", util.timestamp())
+    #     testing_phase_2_data = testing(device)
+
+    #     print("Saving...")
+    #     
+    #     pd.DataFrame(testing_phase_2_data).to_csv(f'testing_phase_2/{args.q}_{credentials.name}.csv', index=False)
+
+    #     device.kill_app('com.ss.android.ugc.trill')
+    #     device.type_text(26)
 
     except Exception as e:
-        device.screenshot(f'screenshots/{credentials.name}.png')
-        # device.destroy()
+        # device.screenshot(f'screenshots/{credentials.name}.png')
+        device.destroy()
 
     # finally:
         # pass
