@@ -219,7 +219,7 @@ def training_phase_2(device, query):
 def testing(device):
     try:
         testing_phase1_data = []
-        for ind in tqdm(range(PARAMETERS["testing_phase_n"])):
+        for iter in tqdm(range(PARAMETERS["testing_phase_n"])):
 
 
             # restart every 50 videos to refresh app state
@@ -256,8 +256,7 @@ def testing(device):
 
             util.swipe_up(device)
     except Exception as e:
-        if e == "'NoneType' object is not subscriptable":
-            restart_app(device)
+        print(e)
 
     return testing_phase1_data
 
