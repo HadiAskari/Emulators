@@ -12,7 +12,7 @@ import json
 import re
 from transformers import pipeline
 from tqdm.auto import tqdm
-from classifier import classify
+from util import classify
 import numpy as np
 
 

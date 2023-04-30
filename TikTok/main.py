@@ -12,7 +12,7 @@ import json
 import re
 from transformers import pipeline
 from tqdm.auto import tqdm
-from classifier import classify
+from util import classify
 
 
 PARAMETERS = dict(
@@ -155,73 +155,21 @@ def login_controller(device, credentials):
                 print("Account signed-in! Quitting.")
                 break
 
-# def training_phase_1(device, query):
-#     # start training
-#     restart_app(device)
-#     training_data_phase1 = []
-
-#     # click on search button
-#     device.tap((1000, 120))
-#     # device.tap((450, 50))
-#     sleep(1)
-
-#     # enter search query
-#     device.type_text(18)
-#     device.type_text(query)
-
-#     # click search button
-#     util.tap_on(device, attrs={'text': 'Search'})
-#     sleep(1)
-
-#     # click first video
-#     util.tap_on(device, attrs={'resource-id': 'com.ss.android.ugc.trill:id/bc5'})
-
-#     for ind in tqdm(range(5)):
-#         # watch short for a certain time
-#         sleep(20)
-
-#         # pause video
-#         util.play_pause(device)
-
-#         # get xml
-#         xml = device.get_xml()
-
-#         # send signal
-#         util.like_bookmark_subscribe(device, xml)
-
-#         # click on see more to reveal content
-#         try: util.tap_on(device, {'text': 'See more'}, xml)
-#         except: pass
-
-#         # grab xml
-#         text_elems = device.find_elements({'text': re.compile('.+')}, xml)
-
-#         # build row
-#         row = {}
-#         for el in text_elems:
-#             row[el['resource-id']] = el['text']
-        
-#         # press on hide to hide content
-#         try: util.tap_on(device, {'text': 'Hide'})
-#         except: pass
-
-#         # append to training data
-#         training_data_phase1.append(row)
-
-#         # swipe to next video
-#         sleep(1)
-#         util.swipe_up(device)
-
-#     return training_data_phase1
-
-
 def training_phase_2(device, query):
     restart_app(device)
 
     count = 0
     # start training
     training_phase_2_data = []
-    while count <= PARAMETERS["training_phase_n"]:
+    for iter in range(1000):
+
+        # restart every 50 videos to refresh app state
+        if iter % 50 == 0:
+            restart_app()
+
+        # break if success
+        if count > PARAMETERS["training_phase_n"]:
+            break
 
         # check for any flow disruptions first
         util.check_disruptions(device)
@@ -273,6 +221,12 @@ def testing(device):
         restart_app(device)
         testing_phase1_data = []
         for ind in tqdm(range(PARAMETERS["testing_phase_n"])):
+
+
+            # restart every 50 videos to refresh app state
+            if iter % 50 == 0:
+                restart_app()
+
             # check for any flow disruptions first
             util.check_disruptions(device)
             
@@ -316,8 +270,18 @@ def Not_Interested(device,query, intervention):
         restart_app(device)
         intervention_data = []
         count = 0
+
+        # for 1000 videos
+        for iter in range(1000):
+
+            # restart every 50 videos to refresh app state
+            if iter % 50 == 0:
+                restart_app()
+
+            # break if success
+            if count > PARAMETERS["intervention_phase_n"]:
+                break
         
-        while count <= PARAMETERS["intervention_phase_n"]:
             # check for any flow disruptions first
             util.check_disruptions(device)
             
@@ -456,7 +420,18 @@ def Unfollow_Not_Interested(device,query, intervention):
         intervention_data = []
         count = 0
         
-        while count <= PARAMETERS["intervention_phase_n"]:
+
+
+        for iter in range(1000):
+
+            # restart every 50 videos to refresh app state
+            if iter % 50 == 0:
+                restart_app()
+
+            # break if success
+            if count > PARAMETERS["intervention_phase_n"]:
+                break
+            
             # check for any flow disruptions first
             util.check_disruptions(device)
             
@@ -521,7 +496,17 @@ def Not_Interested_Unfollow(device,query, intervention):
         intervention_data = []
         count = 0
         
-        while count <= PARAMETERS["intervention_phase_n"]:
+        # upper bound
+        for iter in range(1000):
+
+            # restart every 50 videos to refresh app state
+            if iter % 50 == 0:
+                restart_app()
+
+            # break if success
+            if count > PARAMETERS["intervention_phase_n"]:
+                break
+            
             # check for any flow disruptions first
             util.check_disruptions(device)
             
@@ -621,24 +606,15 @@ def Control():
 if __name__ == '__main__':
     args = parse_args()
     
-    # print("Generating credentials...")
-    # # credentials = generate_credentials(args.q)
-    # credentials = generate_credentials(None)
-    #credentials.name=credentials.name + "big_run"
-    # print(credentials.name)
-    # with open(f'credentials/{credentials.name}', 'w') as f:
-        # json.dump(credentials, f)
-        # f.write('\n')
     
     print("Launching emulator...")
     # device = emulate_new_device(credentials.name)
     device = get_connected_devices()[0]
-    # print("VNC link:", device.get_vnc_link())
-
+    
 
     try:
         print("Installing APKs...")
-        #install_apks(device)
+        install_apks(device)
 
         print("Configuring keyboard...")
         configure_keyboard(device)

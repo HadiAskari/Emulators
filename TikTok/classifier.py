@@ -53,7 +53,7 @@ def classify(hashtag, desc):
     
     text = preprocess(text)
     text = remove_stop_words(text)
-    
+
     if text.strip() == "":
         return False
 
@@ -67,9 +67,8 @@ def classify(hashtag, desc):
     else:
         return False
 
-
 if __name__ == '__main__':
-    classify("test", "hello #world#foo#fyp#viral")
+    # print(classify("antiabortion", "abortion is murder"))
     # print(classify("Abortion", "anti-abortion ban"))
     # print(classify("Abortion", "fyp"))
     # print(classify("Abortion", "roe v wade"))
