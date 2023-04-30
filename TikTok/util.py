@@ -26,7 +26,6 @@ def play_pause(device):
 def tap_on(device, attrs, xml=None):
     elem = device.find_element(attrs=attrs, xml=xml)
     coords = device.get_coordinates(elem)
-    #print(coords)
     device.tap(coords)
 
 def tap_on_nth(device, attrs, n, xml=None):
@@ -52,15 +51,15 @@ def like_bookmark_subscribe(device, xml=None):
     except: pass
 
     # follow creator
-    try: tap_on(device, {'content-desc': re.compile('Follow .*') }, xml)
-    except: pass
+    # try: tap_on(device, {'content-desc': re.compile('Follow .*') }, xml)
+    # except: pass
 
     # bookmark short
-    try: 
-        tap_on(device, {'resource-id': 'com.ss.android.ugc.trill:id/c0k', 'selected': 'false', 'class': 'android.widget.ImageView'}, xml)
-        tap_on(device, {'text': 'OK'})
-        sleep(3)
-    except: pass
+    # try: 
+    #     tap_on(device, {'resource-id': 'com.ss.android.ugc.trill:id/c0k', 'selected': 'false', 'class': 'android.widget.ImageView'}, xml)
+    #     tap_on(device, {'text': 'OK'})
+    #     sleep(3)
+    # except: pass
 
 def timestamp():
     return datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S')

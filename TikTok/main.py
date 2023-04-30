@@ -16,10 +16,10 @@ from classifier import classify
 
 
 PARAMETERS = dict(
-    training_phase_n=25,
+    training_phase_n=10,
     training_phase_sleep=30,
-    testing_phase_n=100,
-    intervention_phase_n=15
+    testing_phase_n=1000,
+    intervention_phase_n=10
 )
 
 
@@ -27,6 +27,7 @@ def parse_args():
     args = ArgumentParser()
     args.add_argument('--q', required=True)
     args.add_argument('--i', help='Intervention Type', required=True)
+    args.add_argument('--n', help='Account Name Type', required=True)
     return args.parse_args()
 
 def generate_credentials(q):
@@ -381,11 +382,8 @@ def Unfollow(device,query, intervention):
 
         intervention_data = []
 
-                        
-        
-
         # press on hide to hide content
-        try: util.tap_on(device, {'text': 'Profile'})
+        try: device.tap((648.0, 1494.5))
         except: pass
         
         try: 
@@ -425,7 +423,7 @@ def Unfollow_Not_Interested(device,query, intervention):
         restart_app(device)
 
         # press on hide to hide content
-        try: util.tap_on(device, {'text': 'Profile'})
+        try: device.tap((648.0, 1494.5))
         except: pass
         
         try: 
@@ -591,7 +589,7 @@ def Not_Interested_Unfollow(device,query, intervention):
 
         while True:
             try:
-                elem = device.find_elements(attrs={'text': 'Following'}, xml=None)
+                elem = device.find_elements(attrs={'text': 'Following'}, xml=None)[1:]
                 print(len(elem))
                 if not elem:
                     break
@@ -638,7 +636,7 @@ if __name__ == '__main__':
 
     try:
         print("Installing APKs...")
-        #install_apks(device)
+        install_apks(device)
 
         print("Configuring keyboard...")
         configure_keyboard(device)
@@ -659,61 +657,61 @@ if __name__ == '__main__':
     #     # print("Training Phase 1...", util.timestamp())
     #     # training_data_phase1 = training_phase_1(device, args.q)
 
-    #     print("Training Phase 2...", util.timestamp())
-    #     training_phase_2_data = training_phase_2(device, args.q)
+        print("Training Phase 2...", util.timestamp())
+        training_phase_2_data = training_phase_2(device, args.q)
         
-        # print("Testing Phase 1...", util.timestamp())
-        # testing_phase_1_data = testing(device)
+        print("Testing Phase 1...", util.timestamp())
+        testing_phase_1_data = testing(device)
 
-    #     print("Saving...", util.timestamp())
-    #     # pd.DataFrame(training_data_phase1).to_csv(f'training_phase_1/{credentials.name}_big.csv', index=False)
-    #     pd.DataFrame(training_phase_2_data).to_csv(f'training_phase_2/{args.q}_{credentials.name}.csv', index=False)
-        # pd.DataFrame(testing_phase_1_data).to_csv(f'testing_phase_1/tiktok_karaabrownn.csv', index=False)
+        print("Saving...", util.timestamp())
+        # pd.DataFrame(training_data_phase1).to_csv(f'training_phase_1/{args.q}_{args.n}.csv', index=False)
+        pd.DataFrame(training_phase_2_data).to_csv(f'training_phase_2/{args.q}_{args.n}.csv', index=False)
+        pd.DataFrame(testing_phase_1_data).to_csv(f'testing_phase_1/{args.q}_{args.n}.csv', index=False)
         
         if args.i == "Not_Interested":
-            pass
-    #     print("Not Interested Only Intervention...", util.timestamp())
-    #     intervention_data = Not_Interested(device,args.q, args.i)
-        # pd.DataFrame(intervention_data).to_csv(f'intervention/{args.q}_{credentials.name}.csv', index=False)
+       
+            print("Not Interested Only Intervention...", util.timestamp())
+            intervention_data = Not_Interested(device,args.q, args.i)
+            pd.DataFrame(intervention_data).to_csv(f'intervention/{args.q}_{args.n}.csv', index=False)
         
         elif args.i == "Unfollow":
             print("Unfollow Only Intervention...", util.timestamp())
             intervention_data = Unfollow(device,args.q, args.i)
-            pd.DataFrame(intervention_data).to_csv(f'intervention/{args.q}.csv', index=False)
+            pd.DataFrame(intervention_data).to_csv(f'intervention/{args.q}_{args.n}.csv', index=False)
 
-        # elif args.i == "Unfollow_Not_Interested":
-    #     print("Unfollow then Not Interested Intervention...", util.timestamp())
-    #     intervention_data = Unfollow_Not_Interested(device,args.q, args.i)
-        # pd.DataFrame(intervention_data).to_csv(f'intervention/{args.q}_{credentials.name}.csv', index=False)
+        elif args.i == "Unfollow_Not_Interested":
+            print("Unfollow then Not Interested Intervention...", util.timestamp())
+            intervention_data = Unfollow_Not_Interested(device,args.q, args.i)
+            pd.DataFrame(intervention_data).to_csv(f'intervention/{args.q}_{args.n}.csv', index=False)
 
-        # elif args.i == "Not_Interested_Unfollow":
-    #     print("Not Interested then Unfollow Intervention...", util.timestamp())
-    #     intervention_data = Not_Interested_Unfollow(device,args.q, args.i)
-        # pd.DataFrame(intervention_data).to_csv(f'intervention/{args.q}_{credentials.name}.csv', index=False)
+        elif args.i == "Not_Interested_Unfollow":
+            print("Not Interested then Unfollow Intervention...", util.timestamp())
+            intervention_data = Not_Interested_Unfollow(device,args.q, args.i)
+            pd.DataFrame(intervention_data).to_csv(f'intervention/{args.q}_{args.n}.csv', index=False)
 
         # elif args.i == "Control":
         #     pass
 
 
         
-    #     print("Testing Phase 2... ", util.timestamp())
-    #     testing_phase_2_data = testing(device)
+        print("Testing Phase 2... ", util.timestamp())
+        testing_phase_2_data = testing(device)
 
-    #     print("Saving...")
+        print("Saving...")
     #     
-    #     pd.DataFrame(testing_phase_2_data).to_csv(f'testing_phase_2/{args.q}_{credentials.name}.csv', index=False)
+        pd.DataFrame(testing_phase_2_data).to_csv(f'testing_phase_2/{args.q}_{args.n}.csv', index=False)
 
-    #     device.kill_app('com.ss.android.ugc.trill')
-    #     device.type_text(26)
+        device.kill_app('com.ss.android.ugc.trill')
+        device.type_text(26)
 
     except Exception as e:
-        # device.screenshot(f'screenshots/{credentials.name}.png')
-        device.destroy()
+        # device.screenshot(f'screenshots/{args.n}.png')
+        pass
 
     # finally:
         # pass
         # device.destroy()
     # except Exception as e:
     #     print(e)
-    #     device.screenshot(f'screenshots/{credentials.name}.png')
+    #     device.screenshot(f'screenshots/{args.n}.png')
         # device.destroy()
