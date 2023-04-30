@@ -34,7 +34,7 @@ def preprocess(text):
     return text  
 
 def remove_stop_words(text):
-    stop_words = ['viral', 'fyp', 'foryoupage', 'foryou']
+    stop_words = ['viral', 'fyp', 'foryoupage', 'foryou', 'xyzbca']
     words = text.split()
     return ' '.join([i for i in words if i not in stop_words])
 
@@ -68,6 +68,7 @@ def classify(hashtag, desc):
         return False
 
 if __name__ == '__main__':
+    pass
     # print(classify("antiabortion", "abortion is murder"))
     # print(classify("Abortion", "anti-abortion ban"))
     # print(classify("Abortion", "fyp"))

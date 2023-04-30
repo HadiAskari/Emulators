@@ -27,6 +27,7 @@ def parse_args():
     args = ArgumentParser()
     args.add_argument('--q', required=True)
     args.add_argument('--i', help='Intervention Type', required=True)
+    args.add_argument('--d', help='Device Index', required=True, type=int)
     args.add_argument('--n', help='Account Name Type', required=True)
     return args.parse_args()
 
@@ -157,16 +158,14 @@ def login_controller(device, credentials):
                 break
 
 def training_phase_2(device, query):
-    restart_app(device)
-
     count = 0
     # start training
     training_phase_2_data = []
-    for iter in range(1000):
+    for iter in tqdm(range(1000)):
 
         # restart every 50 videos to refresh app state
         if iter % 50 == 0:
-            restart_app()
+            restart_app(device)
 
         # break if success
         if count > PARAMETERS["training_phase_n"]:
@@ -194,7 +193,7 @@ def training_phase_2(device, query):
             # like video if it contains the query needed
             if el['resource-id'] == 'com.ss.android.ugc.trill:id/bc5':
                 text = el['text']
-
+                
                 if classify(query, text):
                     print(text)
                     count += 1
@@ -219,14 +218,13 @@ def training_phase_2(device, query):
 
 def testing(device):
     try:
-        restart_app(device)
         testing_phase1_data = []
         for ind in tqdm(range(PARAMETERS["testing_phase_n"])):
 
 
             # restart every 50 videos to refresh app state
             if iter % 50 == 0:
-                restart_app()
+                restart_app(device)
 
             # check for any flow disruptions first
             util.check_disruptions(device)
@@ -265,19 +263,18 @@ def testing(device):
 
 def Not_Interested(device,query, intervention):
     try:
-        if intervention=="Not_Interested":
+        if intervention == "Not_Interested":
             pass 
         
-        restart_app(device)
         intervention_data = []
         count = 0
 
         # for 1000 videos
-        for iter in range(1000):
+        for iter in tqdm(range(1000)):
 
             # restart every 50 videos to refresh app state
             if iter % 50 == 0:
-                restart_app()
+                restart_app(device)
 
             # break if success
             if count > PARAMETERS["intervention_phase_n"]:
@@ -420,11 +417,11 @@ def Unfollow_Not_Interested(device,query, intervention):
         
 
 
-        for iter in range(1000):
+        for iter in tqdm(range(1000)):
 
             # restart every 50 videos to refresh app state
             if iter % 50 == 0:
-                restart_app()
+                restart_app(device)
 
             # break if success
             if count > PARAMETERS["intervention_phase_n"]:
@@ -495,11 +492,11 @@ def Not_Interested_Unfollow(device,query, intervention):
         count = 0
         
         # upper bound
-        for iter in range(1000):
+        for iter in tqdm(range(1000)):
 
             # restart every 50 videos to refresh app state
             if iter % 50 == 0:
-                restart_app()
+                restart_app(device)
 
             # break if success
             if count > PARAMETERS["intervention_phase_n"]:
@@ -607,7 +604,8 @@ if __name__ == '__main__':
     
     print("Launching emulator...")
     # device = emulate_new_device(credentials.name)
-    device = get_connected_devices()[0]
+    print(args.d)
+    device = get_connected_devices()[args.d]
     
 
     try:
@@ -617,8 +615,7 @@ if __name__ == '__main__':
         print("Configuring keyboard...")
         configure_keyboard(device)
         
-        print("Starting TikTok...")
-        restart_app(device)
+        input("Continue?")
         
         # try:
         # print("Signing up...")
@@ -640,30 +637,30 @@ if __name__ == '__main__':
         testing_phase_1_data = testing(device)
 
         print("Saving...", util.timestamp())
-        # pd.DataFrame(training_data_phase1).to_csv(f'training_phase_1/{args.q}_{args.n}.csv', index=False)
-        pd.DataFrame(training_phase_2_data).to_csv(f'training_phase_2/{args.q}_{args.n}.csv', index=False)
-        pd.DataFrame(testing_phase_1_data).to_csv(f'testing_phase_1/{args.q}_{args.n}.csv', index=False)
+        # pd.DataFrame(training_data_phase1).to_csv(f'training_phase_1/{args.q}--{args.i}--{args.n}.csv', index=False)
+        pd.DataFrame(training_phase_2_data).to_csv(f'training_phase_2/{args.q}--{args.i}--{args.n}.csv', index=False)
+        pd.DataFrame(testing_phase_1_data).to_csv(f'testing_phase_1/{args.q}--{args.i}--{args.n}.csv', index=False)
         
         if args.i == "Not_Interested":
        
             print("Not Interested Only Intervention...", util.timestamp())
             intervention_data = Not_Interested(device,args.q, args.i)
-            pd.DataFrame(intervention_data).to_csv(f'intervention/{args.q}_{args.n}.csv', index=False)
+            pd.DataFrame(intervention_data).to_csv(f'intervention/{args.q}--{args.i}--{args.n}.csv', index=False)
         
         elif args.i == "Unfollow":
             print("Unfollow Only Intervention...", util.timestamp())
             intervention_data = Unfollow(device,args.q, args.i)
-            pd.DataFrame(intervention_data).to_csv(f'intervention/{args.q}_{args.n}.csv', index=False)
+            pd.DataFrame(intervention_data).to_csv(f'intervention/{args.q}--{args.i}--{args.n}.csv', index=False)
 
         elif args.i == "Unfollow_Not_Interested":
             print("Unfollow then Not Interested Intervention...", util.timestamp())
             intervention_data = Unfollow_Not_Interested(device,args.q, args.i)
-            pd.DataFrame(intervention_data).to_csv(f'intervention/{args.q}_{args.n}.csv', index=False)
+            pd.DataFrame(intervention_data).to_csv(f'intervention/{args.q}--{args.i}--{args.n}.csv', index=False)
 
         elif args.i == "Not_Interested_Unfollow":
             print("Not Interested then Unfollow Intervention...", util.timestamp())
             intervention_data = Not_Interested_Unfollow(device,args.q, args.i)
-            pd.DataFrame(intervention_data).to_csv(f'intervention/{args.q}_{args.n}.csv', index=False)
+            pd.DataFrame(intervention_data).to_csv(f'intervention/{args.q}--{args.i}--{args.n}.csv', index=False)
 
         # elif args.i == "Control":
         #     pass
@@ -675,13 +672,14 @@ if __name__ == '__main__':
 
         print("Saving...")
     #     
-        pd.DataFrame(testing_phase_2_data).to_csv(f'testing_phase_2/{args.q}_{args.n}.csv', index=False)
+        pd.DataFrame(testing_phase_2_data).to_csv(f'testing_phase_2/{args.q}--{args.i}--{args.n}.csv', index=False)
 
         device.kill_app('com.ss.android.ugc.trill')
         device.type_text(26)
 
     except Exception as e:
         # device.screenshot(f'screenshots/{args.n}.png')
+        print(e)
         pass
 
     # finally:
