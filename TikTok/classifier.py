@@ -33,6 +33,10 @@ def preprocess(text):
     text = text.lower()
     return text  
 
+def remove_stop_words(text):
+    stop_words = ['viral', 'fyp', 'foryoupage', 'foryou']
+    words = text.split()
+    return ' '.join([i for i in words if i not in stop_words])
 
 def classify(hashtag, desc):
 
@@ -48,6 +52,7 @@ def classify(hashtag, desc):
         text = ""
     
     text = preprocess(text)
+    text = remove_stop_words(text)
     
     if text.strip() == "":
         return False
@@ -64,8 +69,10 @@ def classify(hashtag, desc):
 
 
 if __name__ == '__main__':
-    print(classify("Abortion", "anti-abortion ban"))
-    print(classify("Abortion", "fyp"))
-    print(classify("Abortion", "roe v wade"))
-    print(classify("Abortion", "pro-life"))
-    print(classify("Abortion", "pro-choice vs pro-life"))
+    classify("test", "hello #world#foo#fyp#viral")
+    # print(classify("Abortion", "anti-abortion ban"))
+    # print(classify("Abortion", "fyp"))
+    # print(classify("Abortion", "roe v wade"))
+    # print(classify("Abortion", "pro-life"))
+    # print(classify("Abortion", "pro-choice vs pro-life"))
+    
