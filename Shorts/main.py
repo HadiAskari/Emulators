@@ -1,19 +1,13 @@
 from argparse import ArgumentParser
-import argparse
 from random import randint
 from time import sleep
 import util
 from emulator import emulate_new_device, get_connected_devices
 from collections import namedtuple
-import screens
-import os
 import pandas as pd
-import json
 import re
-from transformers import pipeline
 from tqdm.auto import tqdm
 from util import classify
-import numpy as np
 
 
 PARAMETERS = dict(
@@ -41,14 +35,19 @@ def restart_app(device):
 
 
 def training_phase_2(device, query):
-    restart_app(device)
-
     count = 0
     # start training
     training_phase_2_data = []
 
-    pbar = tqdm(total=PARAMETERS["training_phase_n"])
-    while count <= PARAMETERS["training_phase_n"]:
+    for iter in tqdm(range(1000)):
+
+        # restart every 50 videos to refresh app state
+        if iter % 50 == 0:
+            restart_app(device)
+
+        # break if exit satisfied
+        if count > PARAMETERS["training_phase_n"]:
+            break
 
         # check for any flow disruptions first
         util.check_disruptions(device)
@@ -72,7 +71,6 @@ def training_phase_2(device, query):
                 count += 1
                 if not row.get('liked', False):
                     row['liked'] = True
-                    pbar.update(1)
                     # click on like and watch for longer
                     util.like_bookmark_subscribe(device)
                     sleep(PARAMETERS["training_phase_sleep"])
@@ -83,17 +81,16 @@ def training_phase_2(device, query):
         # swipe to next video
         util.swipe_up(device)
     
-    pbar.close()
     return training_phase_2_data
 
 def testing(device):
-
-    restart_app(device)
-    count = 0
-    pbar = tqdm(total=PARAMETERS["testing_phase_n"])
     # start training
-    testing_phase1_data = []
-    while count <= PARAMETERS["testing_phase_n"]:
+    testing_phase1_data = []    
+    for iter in tqdm(range(PARAMETERS["testing_phase_n"])):
+
+        # restart every 50 videos to refresh app state
+        if iter % 50 == 0:
+            restart_app(device)
 
         # check for any flow disruptions first
         util.check_disruptions(device)
@@ -119,9 +116,6 @@ def testing(device):
         count += 1
         
         util.swipe_up(device)
-        pbar.update(1)
-        
-    pbar.close()
 
     return testing_phase1_data
 
