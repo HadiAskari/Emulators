@@ -108,49 +108,43 @@ def training_phase_2(device, query):
         util.swipe_up(device)
     return training_phase_2_data
 
-#Also code "Cool Down Period Later"
-
 def testing(device):
-    try:
-        testing_phase1_data = []
-        for iter in tqdm(range(PARAMETERS["testing_phase_n"])):
+    testing_phase1_data = []
+    for iter in tqdm(range(PARAMETERS["testing_phase_n"])):
 
+        # restart every 50 videos to refresh app state
+        if iter % 50 == 0:
+            restart_app(device)
 
-            # restart every 50 videos to refresh app state
-            if iter % 50 == 0:
-                restart_app(device)
+        # check for any flow disruptions first
+        util.check_disruptions(device)
+        
+        # watch short for a certain time
+        sleep(1)
 
-            # check for any flow disruptions first
-            util.check_disruptions(device)
-            
-            # watch short for a certain time
-            sleep(1)
+        # pause video
+        util.play_pause(device)
 
-            # pause video
-            util.play_pause(device)
+        # click on see more to reveal content
+        try: util.tap_on(device, {'text': 'See more'})
+        except: pass
 
-            # click on see more to reveal content
-            try: util.tap_on(device, {'text': 'See more'})
-            except: pass
+        # grab xml
+        text_elems = device.find_elements({'text': re.compile('.+')})
 
-            # grab xml
-            text_elems = device.find_elements({'text': re.compile('.+')})
+        # grab text elements
+        row = {}
+        for el in text_elems:
+            row[el['resource-id']] = el['text']
 
-            # grab text elements
-            row = {}
-            for el in text_elems:
-                row[el['resource-id']] = el['text']
+        # append to training data
+        testing_phase1_data.append(row)
 
-            # append to training data
-            testing_phase1_data.append(row)
+        # press on hide to hide content
+        try: util.tap_on(device, {'text': 'Hide'})
+        except: pass
 
-            # press on hide to hide content
-            try: util.tap_on(device, {'text': 'Hide'})
-            except: pass
-
-            util.swipe_up(device)
-    except Exception as e:
-        print(e)
+        util.swipe_up(device)
 
     return testing_phase1_data
 
