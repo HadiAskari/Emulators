@@ -164,7 +164,7 @@ def training_phase_2(device, query):
     for iter in tqdm(range(1000)):
 
         # restart every 50 videos to refresh app state
-        if iter % 50 == 0:
+        if iter % 20 == 0:
             restart_app(device)
 
         # break if success
@@ -219,11 +219,11 @@ def training_phase_2(device, query):
 def testing(device):
     try:
         testing_phase1_data = []
-        for ind in tqdm(range(PARAMETERS["testing_phase_n"])):
+        for iter in tqdm(range(PARAMETERS["testing_phase_n"])):
 
 
             # restart every 50 videos to refresh app state
-            if iter % 50 == 0:
+            if iter % 20 == 0:
                 restart_app(device)
 
             # check for any flow disruptions first
@@ -420,7 +420,7 @@ def Unfollow_Not_Interested(device,query, intervention):
         for iter in tqdm(range(1000)):
 
             # restart every 50 videos to refresh app state
-            if iter % 50 == 0:
+            if iter % 20 == 0:
                 restart_app(device)
 
             # break if success
@@ -495,7 +495,7 @@ def Not_Interested_Unfollow(device,query, intervention):
         for iter in tqdm(range(1000)):
 
             # restart every 50 videos to refresh app state
-            if iter % 50 == 0:
+            if iter % 20 == 0:
                 restart_app(device)
 
             # break if success
