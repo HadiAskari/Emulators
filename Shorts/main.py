@@ -86,7 +86,7 @@ def training_phase_2(device, query):
     return training_phase_2_data
 
 def testing(device):
-    # start training
+    # start testing
     testing_phase1_data = []    
     for iter in tqdm(range(PARAMETERS["testing_phase_n"])):
 
@@ -323,7 +323,7 @@ def Not_Interested_Unfollow(device,query, intervention):
         count = 0
 
         # for 1000 videos
-        for iter in tqdm(range(3)):
+        for iter in tqdm(range(1000)):
 
             # restart every 50 videos to refresh app state
             if iter % 20 == 0:

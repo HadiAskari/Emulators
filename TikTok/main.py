@@ -499,19 +499,6 @@ if __name__ == '__main__':
         configure_keyboard(device)
         
         input("Continue?")
-        
-        # try:
-        # print("Signing up...")
-        # signup_controller(device, credentials)
-
-    #     # with open('accounts.txt', 'a') as f:
-    #     #     f.write('\n%s,%s' % (credentials.email, credentials.password))
-
-    #     # print("Logging in")
-    #     # login_controller(device, credentials)
-
-    #     # print("Training Phase 1...", util.timestamp())
-    #     # training_data_phase1 = training_phase_1(device, args.q)
 
         print("Training Phase 2...", util.timestamp())
         training_phase_2_data = training_phase_2(device, args.q)
