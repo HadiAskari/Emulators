@@ -14,7 +14,7 @@ PARAMETERS = dict(
     training_phase_n=10,
     training_phase_sleep=30,
     testing_phase_n=1000,
-    intervention_phase_n=30
+    intervention_phase_n=10
 )
 
 
@@ -33,7 +33,7 @@ def restart_app(device):
     device.kill_app('com.google.android.youtube')
     device.launch_app('com.google.android.youtube')
     sleep(5)
-    util.tap_on(device, attrs={'content-desc': 'Shorts'})
+    util.tap_on(device, attrs={'content-desc': 'Shorts', 'class': "android.widget.Button"})
 
 
 def training_phase_2(device, query):
@@ -123,10 +123,125 @@ def testing(device):
 
 
 def Not_Interested(device,query, intervention):
-    try:
-        if intervention == "Not_Interested":
-            pass 
+    if intervention == "Not_Interested":
+        pass 
+    
+    intervention_data = []
+    count = 0
+
+    # for 1000 videos
+    for iter in tqdm(range(1000)):
+
+        # restart every 50 videos to refresh app state
+        if iter % 20 == 0:
+            restart_app(device)
+
+        # break if success
+        if count > PARAMETERS["intervention_phase_n"]:
+            print('breaking',count)
+            break
+    
+        # check for any flow disruptions first
+        #util.check_disruptions(device)
         
+        # watch short for a certain time
+        sleep(1)
+
+        
+
+        xml = device.get_xml()
+        text_elems = device.find_elements({'content-desc': re.compile('.+')}, xml)
+        text_elems += device.find_elements({'text': re.compile('.+')}, xml)
+
+        # build row
+        row = {}
+        for column_id, elem in enumerate(text_elems):
+            key = elem['resource-id']
+            if key.strip() == '':
+                key = 'col_%s' % column_id
+            text = elem['content-desc']
+            if text.strip() == '':
+                text = elem['text']
+            if text == '':
+                continue
+            row[key] = text
+            
+            if elem['resource-id'] == 'com.google.android.youtube:id/reel_main_title' and classify(query, text):
+                count += 1
+                row['Intervened'] = True
+                row['Intervention'] = intervention
+                print(text)
+
+                #longtap
+                device.longtap()
+                sleep(1)
+
+                # click on Not intereseted
+                try: util.tap_on(device, {'text': "Don't recommend this channel"})
+                except: util.swipe_up(device)
+
+        intervention_data.append(row)
+
+        # swipe to next video only if did not intervene here
+        if not row.get('Intervened'):
+            util.swipe_up(device)
+        
+
+    return intervention_data
+
+def Unfollow(device,query, intervention):
+    if intervention=="Unfollow":
+        pass 
+    
+    restart_app(device)
+
+    intervention_data = []
+
+    # press on hide to hide content
+    try: util.tap_on(device, attrs={'content-desc': 'Subscriptions'})
+    except: pass
+
+    util.tap_on(device, {'resource-id':"com.google.android.youtube:id/channels_button"})
+
+    xml = device.get_xml()
+    elems = device.find_elements({'class':"android.view.ViewGroup", "clickable":"true"}, xml)
+    for n in range(1, len(elems), 2):
+        # click bell icon
+        util.tap_on_nth(device, {'class':"android.view.ViewGroup", "clickable":"true"}, n, xml)
+        sleep(1)
+        # click unsubscribe
+        device.tap((300, 1500))
+        sleep(1)
+
+    return intervention_data
+
+def Unfollow_Not_Interested(device,query, intervention):
+    try:
+        if intervention=="Unfollow_Not_Interested":
+            pass 
+            
+        restart_app(device)
+
+        intervention_data = []
+
+        # press on hide to hide content
+        try: util.tap_on(device, attrs={'content-desc': 'Subscriptions'})
+        except: pass
+
+        try: util.tap_on(device, {'resource-id':"com.google.android.youtube:id/channels_button"})
+        except: pass
+
+        xml = device.get_xml()
+        elems = device.find_elements({'class':"android.view.ViewGroup", "clickable":"true"}, xml)
+        for n in range(1, len(elems), 2):
+            # click bell icon
+            util.tap_on_nth(device, {'class':"android.view.ViewGroup", "clickable":"true"}, n, xml)
+            sleep(1)
+            # click unsubscribe
+            device.tap((300, 1500))
+            sleep(1)
+
+
         intervention_data = []
         count = 0
 
@@ -136,9 +251,11 @@ def Not_Interested(device,query, intervention):
             # restart every 50 videos to refresh app state
             if iter % 20 == 0:
                 restart_app(device)
+                util.tap_on(device, attrs={'content-desc': 'Shorts', 'class': "android.widget.Button"})
 
             # break if success
             if count > PARAMETERS["intervention_phase_n"]:
+                print('breaking',count)
                 break
         
             # check for any flow disruptions first
@@ -147,195 +264,48 @@ def Not_Interested(device,query, intervention):
             # watch short for a certain time
             sleep(1)
 
-            # pause video
-            util.play_pause(device)
+            
 
-            # click on see more to reveal content
-            try: util.tap_on(device, {'text': 'See more'})
-            except: pass
-
-            # grab xml
-            text_elems = device.find_elements({'text': re.compile('.+')})
+            xml = device.get_xml()
+            text_elems = device.find_elements({'content-desc': re.compile('.+')}, xml)
+            text_elems += device.find_elements({'text': re.compile('.+')}, xml)
 
             # build row
             row = {}
-
-            for el in text_elems:
-
-                row[el['resource-id']] = el['text']
+            for column_id, elem in enumerate(text_elems):
+                key = elem['resource-id']
+                if key.strip() == '':
+                    key = 'col_%s' % column_id
+                text = elem['content-desc']
+                if text.strip() == '':
+                    text = elem['text']
+                if text == '':
+                    continue
+                row[key] = text
                 
-                # like video if it contains the query needed
-                if el['resource-id']=='com.ss.android.ugc.trill:id/bc5':
-                    text = el['text']
+                if elem['resource-id'] == 'com.google.android.youtube:id/reel_main_title' and classify(query, text):
+                    count += 1
+                    row['Intervened'] = True
+                    row['Intervention'] = intervention
+                    print(text)
 
-                    if classify(query, text):
-                        count += 1
-                        row['Intervened'] = True
-                        row['Intervention'] = intervention
+                    #longtap
+                    device.longtap()
+                    sleep(1)
 
-                        #longtap
-                        device.longtap()
+                    # click on Not intereseted
+                    try: util.tap_on(device, {'text': "Don't recommend this channel"})
+                    except: util.swipe_up(device)
 
-                        # click on Not intereseted
-                        util.tap_on(device, {'text': 'Not interested'})
-                        sleep(1)
-                        
-            # append to training data
             intervention_data.append(row)
 
-            # press on hide to hide content
-            try: util.tap_on(device, {'text': 'Hide'})
-            except: pass
-
-            # swipe to next
-            util.swipe_up(device)
-    except Exception as e:
-        if e == "'NoneType' object is not subscriptable":
-            restart_app(device)
-
-    return intervention_data
-
-def Unfollow(device,query, intervention):
-    try:
-        if intervention=="Unfollow":
-            pass 
-        
-        restart_app(device)
-
-        intervention_data = []
-
-        # press on hide to hide content
-        try: device.tap((648.0, 1494.5))
-        except: pass
-        
-        try: 
-            util.tap_on(device, {'text': 'Following'})
-            sleep(0.5)
-        except Exception as e:
-            print(e)
-            pass
-
-        while True:
-            try:
-                elem = device.find_elements(attrs={'text': 'Following'}, xml=None)
-                print(len(elem))
-                if not elem:
-                    break
-                for items in elem:
-                    print(items)
-                    if items["index"]=="2":
-                        print("Here")
-                        coords = device.get_coordinates(items)
-                        device.tap(coords)
+            # swipe to next video only if did not intervene here
+            if not row.get('Intervened'):
                 util.swipe_up(device)
-            except Exception as e:
-                print(e)
-
-    except Exception as e:
-        if e == "'NoneType' object is not subscriptable":
-            restart_app(device)
-
-    return intervention_data
-
-def Unfollow_Not_Interested(device,query, intervention):
-    try:
-        if intervention=="Unfollow_Not_Interested":
-            pass 
-        
-        restart_app(device)
-
-        # press on hide to hide content
-        try: device.tap((648.0, 1494.5))
-        except: pass
-        
-        try: 
-            util.tap_on(device, {'text': 'Following'})
-            sleep(0.5)
-        except Exception as e:
-            print(e)
-            pass
-
-        while True:
-            try:
-                elem = device.find_elements(attrs={'text': 'Following'}, xml=None)
-                print(len(elem))
-                if not elem:
-                    break
-                for items in elem:
-                    print(items)
-                    if items["index"]=="2":
-                        print("Here")
-                        coords = device.get_coordinates(items)
-                        device.tap(coords)
-                util.swipe_up(device)
-            except Exception as e:
-                print(e)
-
-        restart_app(device)
-
-        intervention_data = []
-        count = 0
-        
-
-
-        for iter in tqdm(range(1000)):
-
-            # restart every 50 videos to refresh app state
-            if iter % 20 == 0:
-                restart_app(device)
-
-            # break if success
-            if count > PARAMETERS["intervention_phase_n"]:
-                break
             
-            # check for any flow disruptions first
-            #util.check_disruptions(device)
-            
-            # watch short for a certain time
-            sleep(1)
 
-            # pause video
-            util.play_pause(device)
-
-            # click on see more to reveal content
-            try: util.tap_on(device, {'text': 'See more'})
-            except: pass
-
-            # grab xml
-            text_elems = device.find_elements({'text': re.compile('.+')})
-
-            # build row
-            row = {}
-
-            for el in text_elems:
-
-                row[el['resource-id']] = el['text']
-                
-                # like video if it contains the query needed
-                if el['resource-id']=='com.ss.android.ugc.trill:id/bc5':
-                    text = el['text']
-
-                    if classify(query, text):
-                        count += 1
-                        row['Intervened'] = True
-                        row['Intervention'] = intervention
-
-                        #longtap
-                        device.longtap()
-
-                        # click on Not intereseted
-                        util.tap_on(device, {'text': 'Not interested'})
-                        sleep(1)
-                        
-            # append to training data
-            intervention_data.append(row)
-
-            # press on hide to hide content
-            try: util.tap_on(device, {'text': 'Hide'})
-            except: pass
-
-            # swipe to next
-            util.swipe_up(device)
+        return intervention_data
+        
 
     except Exception as e:
         if e == "'NoneType' object is not subscriptable":
@@ -351,101 +321,85 @@ def Not_Interested_Unfollow(device,query, intervention):
         restart_app(device)
         intervention_data = []
         count = 0
-        
-        # upper bound
-        for iter in tqdm(range(1000)):
+
+        # for 1000 videos
+        for iter in tqdm(range(3)):
 
             # restart every 50 videos to refresh app state
             if iter % 20 == 0:
                 restart_app(device)
+                util.tap_on(device, attrs={'content-desc': 'Shorts', 'class': "android.widget.Button"})
 
             # break if success
             if count > PARAMETERS["intervention_phase_n"]:
+                print('breaking',count)
                 break
-            
+        
             # check for any flow disruptions first
             #util.check_disruptions(device)
             
             # watch short for a certain time
             sleep(1)
 
-            # pause video
-            util.play_pause(device)
+            
 
-            # click on see more to reveal content
-            try: util.tap_on(device, {'text': 'See more'})
-            except: pass
-
-            # grab xml
-            text_elems = device.find_elements({'text': re.compile('.+')})
+            xml = device.get_xml()
+            text_elems = device.find_elements({'content-desc': re.compile('.+')}, xml)
+            text_elems += device.find_elements({'text': re.compile('.+')}, xml)
 
             # build row
             row = {}
-
-            for el in text_elems:
-
-                row[el['resource-id']] = el['text']
+            for column_id, elem in enumerate(text_elems):
+                key = elem['resource-id']
+                if key.strip() == '':
+                    key = 'col_%s' % column_id
+                text = elem['content-desc']
+                if text.strip() == '':
+                    text = elem['text']
+                if text == '':
+                    continue
+                row[key] = text
                 
-                # like video if it contains the query needed
-                if el['resource-id']=='com.ss.android.ugc.trill:id/bc5':
-                    text = el['text']
+                if elem['resource-id'] == 'com.google.android.youtube:id/reel_main_title' and classify(query, text):
+                    count += 1
+                    row['Intervened'] = True
+                    row['Intervention'] = intervention
+                    print(text)
 
-                    if classify(query, text):
-                        count += 1
-                        row['Intervened'] = True
-                        row['Intervention'] = intervention
+                    #longtap
+                    device.longtap()
+                    sleep(1)
 
-                        #longtap
-                        device.longtap()
+                    # click on Not intereseted
+                    try: util.tap_on(device, {'text': "Don't recommend this channel"})
+                    except: util.swipe_up(device)
 
-                        # click on Not intereseted
-                        util.tap_on(device, {'text': 'Not interested'})
-                        sleep(1)
-                        
-            # append to training data
             intervention_data.append(row)
 
-            # press on hide to hide content
-            try: util.tap_on(device, {'text': 'Hide'})
-            except: pass
+            # swipe to next video only if did not intervene here
+            if not row.get('Intervened'):
+                util.swipe_up(device)
 
-            # swipe to next
-            util.swipe_up(device)
-
+                   
         restart_app(device)
 
-        intervention_data = []
-
-                        
-        
-
         # press on hide to hide content
-        try: util.tap_on(device, {'text': 'Profile'})
+        try: util.tap_on(device, attrs={'content-desc': 'Subscriptions'})
         except: pass
-        
-        try: 
-            util.tap_on(device, {'text': 'Following'})
-            sleep(0.5)
-        except Exception as e:
-            print(e)
-            pass
 
-        while True:
-            try:
-                elem = device.find_elements(attrs={'text': 'Following'}, xml=None)[1:]
-                print(len(elem))
-                if not elem:
-                    break
-                for items in elem:
-                    print(items)
-                    if items["index"]=="2":
-                        print("Here")
-                        coords = device.get_coordinates(items)
-                        device.tap(coords)
-                util.swipe_up(device)
-            except Exception as e:
-                print(e)
-        
+        try: util.tap_on(device, {'resource-id':"com.google.android.youtube:id/channels_button"})
+        except: pass
+
+        xml = device.get_xml()
+        elems = device.find_elements({'class':"android.view.ViewGroup", "clickable":"true"}, xml)
+        for n in range(1, len(elems), 2):
+            # click bell icon
+            util.tap_on_nth(device, {'class':"android.view.ViewGroup", "clickable":"true"}, n, xml)
+            sleep(1)
+            # click unsubscribe
+            device.tap((300, 1500))
+            sleep(1)
+
     except Exception as e:
         if e == "'NoneType' object is not subscriptable":
             restart_app(device)
@@ -460,14 +414,14 @@ def Control():
 
 
 if __name__ == '__main__':
-    args = parse_args()
-    
-    # print("Launching emulator...")
-    # device = emulate_new_device(credentials.name)
-    device = get_connected_devices()[args.d]
+        args = parse_args()
+        
+        # print("Launching emulator...")
+        # device = emulate_new_device(credentials.name)
+        device = get_connected_devices()[args.d]
 
 
-    try:
+    # try:
         print("Configuring keyboard...")
         configure_keyboard(device)
 
@@ -517,8 +471,8 @@ if __name__ == '__main__':
     #     device.kill_app('com.ss.android.ugc.trill')
     #     device.type_text(26)
 
-    except Exception as e:
-        pass
+    # except Exception as e:
+    #     pass
         # device.screenshot(f'screenshots/{credentials.name}.png')
         # device.destroy()
 
