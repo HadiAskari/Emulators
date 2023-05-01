@@ -17,10 +17,10 @@ import numpy as np
 
 
 PARAMETERS = dict(
-    training_phase_n=5,
-    training_phase_sleep=5,
-    testing_phase_n=10,
-    intervention_phase_n=5
+    training_phase_n=10,
+    training_phase_sleep=30,
+    testing_phase_n=1000,
+    intervention_phase_n=30
 )
 
 def parse_args():
