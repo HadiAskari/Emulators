@@ -160,7 +160,7 @@ def Not_Interested(device,query, intervention):
         for iter in tqdm(range(1000)):
 
             # restart every 50 videos to refresh app state
-            if iter % 50 == 0:
+            if iter % 20 == 0:
                 restart_app(device)
 
             # break if success
