@@ -18,7 +18,6 @@ PARAMETERS = dict(
     intervention_phase_n=10
 )
 
-
 def parse_args():
     args = ArgumentParser()
     args.add_argument('--q', required=True)
@@ -488,13 +487,10 @@ def Control():
 if __name__ == '__main__':
     args = parse_args()
     
-    
-    print("Launching emulator...")
+    # print("Launching emulator...")
     # device = emulate_new_device(credentials.name)
-    print(args.d)
     device = get_connected_devices()[args.d]
     
-
     try:
         print("Installing APKs...")
         install_apks(device)

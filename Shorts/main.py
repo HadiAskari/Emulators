@@ -11,17 +11,19 @@ from util import classify
 
 
 PARAMETERS = dict(
-    training_phase_n=5,
-    training_phase_sleep=5,
-    testing_phase_n=10,
-    intervention_phase_n=5
+    training_phase_n=10,
+    training_phase_sleep=30,
+    testing_phase_n=1000,
+    intervention_phase_n=10
 )
+
 
 def parse_args():
     args = ArgumentParser()
-    args.add_argument('identifier')
     args.add_argument('--q', required=True)
     args.add_argument('--i', help='Intervention Type', required=True)
+    args.add_argument('--d', help='Device Index', required=True, type=int)
+    args.add_argument('--n', help='Account Name Type', required=True)
     return args.parse_args()
 
 def configure_keyboard(device):
@@ -187,10 +189,9 @@ def Intervention(device,query, intervention):
 if __name__ == '__main__':
     args = parse_args()
     
-    print("Launching emulator...")
+    # print("Launching emulator...")
     # device = emulate_new_device(credentials.name)
-    # print("VNC link:", device.get_vnc_link())
-    device = get_connected_devices()[0]
+    device = get_connected_devices()[args.d]
 
 
     try:
