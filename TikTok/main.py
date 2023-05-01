@@ -164,7 +164,7 @@ def training_phase_2(device, query):
     for iter in tqdm(range(1000)):
 
         # restart every 50 videos to refresh app state
-        if iter % 50 == 0:
+        if iter % 20 == 0:
             restart_app(device)
 
         # break if success
@@ -219,11 +219,11 @@ def training_phase_2(device, query):
 def testing(device):
     try:
         testing_phase1_data = []
-        for ind in tqdm(range(PARAMETERS["testing_phase_n"])):
+        for iter in tqdm(range(PARAMETERS["testing_phase_n"])):
 
 
             # restart every 50 videos to refresh app state
-            if iter % 50 == 0:
+            if iter % 20 == 0:
                 restart_app(device)
 
             # check for any flow disruptions first
@@ -273,7 +273,7 @@ def Not_Interested(device,query, intervention):
         for iter in tqdm(range(1000)):
 
             # restart every 50 videos to refresh app state
-            if iter % 50 == 0:
+            if iter % 20 == 0:
                 restart_app(device)
 
             # break if success
@@ -397,11 +397,9 @@ def Unfollow_Not_Interested(device,query, intervention):
         while True:
             try:
                 elem = device.find_elements(attrs={'text': 'Following'}, xml=None)
-                print(len(elem))
                 if not elem:
                     break
                 for items in elem:
-                    print(items)
                     if items["index"]=="2":
                         print("Here")
                         coords = device.get_coordinates(items)
@@ -420,7 +418,7 @@ def Unfollow_Not_Interested(device,query, intervention):
         for iter in tqdm(range(1000)):
 
             # restart every 50 videos to refresh app state
-            if iter % 50 == 0:
+            if iter % 20 == 0:
                 restart_app(device)
 
             # break if success
@@ -495,7 +493,7 @@ def Not_Interested_Unfollow(device,query, intervention):
         for iter in tqdm(range(1000)):
 
             # restart every 50 videos to refresh app state
-            if iter % 50 == 0:
+            if iter % 20 == 0:
                 restart_app(device)
 
             # break if success
@@ -604,7 +602,6 @@ if __name__ == '__main__':
     
     print("Launching emulator...")
     # device = emulate_new_device(credentials.name)
-    print(args.d)
     device = get_connected_devices()[args.d]
     
 
@@ -630,15 +627,15 @@ if __name__ == '__main__':
     #     # print("Training Phase 1...", util.timestamp())
     #     # training_data_phase1 = training_phase_1(device, args.q)
 
-        print("Training Phase 2...", util.timestamp())
-        training_phase_2_data = training_phase_2(device, args.q)
+        # print("Training Phase 2...", util.timestamp())
+        # training_phase_2_data = training_phase_2(device, args.q)
         
         print("Testing Phase 1...", util.timestamp())
         testing_phase_1_data = testing(device)
 
         print("Saving...", util.timestamp())
-        # pd.DataFrame(training_data_phase1).to_csv(f'training_phase_1/{args.q}--{args.i}--{args.n}.csv', index=False)
-        pd.DataFrame(training_phase_2_data).to_csv(f'training_phase_2/{args.q}--{args.i}--{args.n}.csv', index=False)
+        # # pd.DataFrame(training_data_phase1).to_csv(f'training_phase_1/{args.q}--{args.i}--{args.n}.csv', index=False)
+        # pd.DataFrame(training_phase_2_data).to_csv(f'training_phase_2/{args.q}--{args.i}--{args.n}.csv', index=False)
         pd.DataFrame(testing_phase_1_data).to_csv(f'testing_phase_1/{args.q}--{args.i}--{args.n}.csv', index=False)
         
         if args.i == "Not_Interested":
