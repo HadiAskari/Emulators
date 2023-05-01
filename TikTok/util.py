@@ -41,6 +41,12 @@ def tap_on_nth(device, attrs, n, xml=None):
     coords = device.get_coordinates(elem)
     device.tap(coords)
 
+def tap_on_all(device, attrs, xml=None):
+    elem = device.find_elements(attrs=attrs, xml=xml)
+    for items in elem:
+        coords = device.get_coordinates(items)
+        device.tap(coords)
+
 def check_disruptions(device):
     xml = device.get_xml()
     if 'Sponsored' in xml:

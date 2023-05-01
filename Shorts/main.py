@@ -1,33 +1,29 @@
 from argparse import ArgumentParser
-import argparse
 from random import randint
 from time import sleep
 import util
 from emulator import emulate_new_device, get_connected_devices
 from collections import namedtuple
-import screens
-import os
 import pandas as pd
-import json
 import re
-from transformers import pipeline
 from tqdm.auto import tqdm
 from util import classify
-import numpy as np
 
 
 PARAMETERS = dict(
-    training_phase_n=5,
-    training_phase_sleep=5,
-    testing_phase_n=10,
-    intervention_phase_n=5
+    training_phase_n=10,
+    training_phase_sleep=30,
+    testing_phase_n=1000,
+    intervention_phase_n=10
 )
+
 
 def parse_args():
     args = ArgumentParser()
-    args.add_argument('identifier')
     args.add_argument('--q', required=True)
     args.add_argument('--i', help='Intervention Type', required=True)
+    args.add_argument('--d', help='Device Index', required=True, type=int)
+    args.add_argument('--n', help='Account Name Type', required=True)
     return args.parse_args()
 
 def configure_keyboard(device):
@@ -37,21 +33,26 @@ def restart_app(device):
     device.kill_app('com.google.android.youtube')
     device.launch_app('com.google.android.youtube')
     sleep(5)
-    util.tap_on(device, attrs={'content-desc': 'Shorts'})
+    util.tap_on(device, attrs={'content-desc': 'Shorts', 'class': "android.widget.Button"})
 
 
 def training_phase_2(device, query):
-    restart_app(device)
-
     count = 0
     # start training
     training_phase_2_data = []
 
-    pbar = tqdm(total=PARAMETERS["training_phase_n"])
-    while count <= PARAMETERS["training_phase_n"]:
+    for iter in tqdm(range(1000)):
+
+        # restart every 20 videos to refresh app state
+        if iter % 20 == 0:
+            restart_app(device)
+
+        # break if exit satisfied
+        if count > PARAMETERS["training_phase_n"]:
+            break
 
         # check for any flow disruptions first
-        util.check_disruptions(device)
+        #util.check_disruptions(device)
 
         # grab xml
         xml = device.get_xml()
@@ -72,7 +73,6 @@ def training_phase_2(device, query):
                 count += 1
                 if not row.get('liked', False):
                     row['liked'] = True
-                    pbar.update(1)
                     # click on like and watch for longer
                     util.like_bookmark_subscribe(device)
                     sleep(PARAMETERS["training_phase_sleep"])
@@ -83,20 +83,19 @@ def training_phase_2(device, query):
         # swipe to next video
         util.swipe_up(device)
     
-    pbar.close()
     return training_phase_2_data
 
 def testing(device):
+    # start testing
+    testing_phase1_data = []    
+    for iter in tqdm(range(PARAMETERS["testing_phase_n"])):
 
-    restart_app(device)
-    count = 0
-    pbar = tqdm(total=PARAMETERS["testing_phase_n"])
-    # start training
-    testing_phase1_data = []
-    while count <= PARAMETERS["testing_phase_n"]:
+        # restart every 50 videos to refresh app state
+        if iter % 20 == 0:
+            restart_app(device)
 
         # check for any flow disruptions first
-        util.check_disruptions(device)
+        #util.check_disruptions(device)
 
         # grab xml
         xml = device.get_xml()
@@ -119,100 +118,345 @@ def testing(device):
         count += 1
         
         util.swipe_up(device)
-        pbar.update(1)
-        
-    pbar.close()
 
     return testing_phase1_data
 
-def Intervention(device,query, intervention):
-    try:
-        if intervention=="Not_Interested":
-            pass 
+
+def Not_Interested(device,query, intervention):
+    if intervention == "Not_Interested":
+        pass 
+    
+    intervention_data = []
+    count = 0
+
+    # for 1000 videos
+    for iter in tqdm(range(1000)):
+
+        # restart every 50 videos to refresh app state
+        if iter % 20 == 0:
+            restart_app(device)
+
+        # break if success
+        if count > PARAMETERS["intervention_phase_n"]:
+            print('breaking',count)
+            break
+    
+        # check for any flow disruptions first
+        #util.check_disruptions(device)
         
+        # watch short for a certain time
+        sleep(1)
+
+        
+
+        xml = device.get_xml()
+        text_elems = device.find_elements({'content-desc': re.compile('.+')}, xml)
+        text_elems += device.find_elements({'text': re.compile('.+')}, xml)
+
+        # build row
+        row = {}
+        for column_id, elem in enumerate(text_elems):
+            key = elem['resource-id']
+            if key.strip() == '':
+                key = 'col_%s' % column_id
+            text = elem['content-desc']
+            if text.strip() == '':
+                text = elem['text']
+            if text == '':
+                continue
+            row[key] = text
+            
+            if elem['resource-id'] == 'com.google.android.youtube:id/reel_main_title' and classify(query, text):
+                count += 1
+                row['Intervened'] = True
+                row['Intervention'] = intervention
+                print(text)
+
+                #longtap
+                device.longtap()
+                sleep(1)
+
+                # click on Not intereseted
+                try: util.tap_on(device, {'text': "Don't recommend this channel"})
+                except: util.swipe_up(device)
+
+        intervention_data.append(row)
+
+        # swipe to next video only if did not intervene here
+        if not row.get('Intervened'):
+            util.swipe_up(device)
+        
+
+    return intervention_data
+
+def Unfollow(device,query, intervention):
+    if intervention=="Unfollow":
+        pass 
+    
+    restart_app(device)
+
+    intervention_data = []
+
+    # press on hide to hide content
+    try: util.tap_on(device, attrs={'content-desc': 'Subscriptions'})
+    except: pass
+
+    util.tap_on(device, {'resource-id':"com.google.android.youtube:id/channels_button"})
+
+    xml = device.get_xml()
+    elems = device.find_elements({'class':"android.view.ViewGroup", "clickable":"true"}, xml)
+    for n in range(1, len(elems), 2):
+        # click bell icon
+        util.tap_on_nth(device, {'class':"android.view.ViewGroup", "clickable":"true"}, n, xml)
+        sleep(1)
+        # click unsubscribe
+        device.tap((300, 1500))
+        sleep(1)
+
+    return intervention_data
+
+def Unfollow_Not_Interested(device,query, intervention):
+    try:
+        if intervention=="Unfollow_Not_Interested":
+            pass 
+            
         restart_app(device)
+
+        intervention_data = []
+
+        # press on hide to hide content
+        try: util.tap_on(device, attrs={'content-desc': 'Subscriptions'})
+        except: pass
+
+        try: util.tap_on(device, {'resource-id':"com.google.android.youtube:id/channels_button"})
+        except: pass
+
+        xml = device.get_xml()
+        elems = device.find_elements({'class':"android.view.ViewGroup", "clickable":"true"}, xml)
+        for n in range(1, len(elems), 2):
+            # click bell icon
+            util.tap_on_nth(device, {'class':"android.view.ViewGroup", "clickable":"true"}, n, xml)
+            sleep(1)
+            # click unsubscribe
+            device.tap((300, 1500))
+            sleep(1)
+
+
         intervention_data = []
         count = 0
+
+        # for 1000 videos
+        for iter in tqdm(range(1000)):
+
+            # restart every 50 videos to refresh app state
+            if iter % 20 == 0:
+                restart_app(device)
+                util.tap_on(device, attrs={'content-desc': 'Shorts', 'class': "android.widget.Button"})
+
+            # break if success
+            if count > PARAMETERS["intervention_phase_n"]:
+                print('breaking',count)
+                break
         
-        while count <= PARAMETERS["intervention_phase_n"]:
             # check for any flow disruptions first
-            util.check_disruptions(device)
+            #util.check_disruptions(device)
             
             # watch short for a certain time
             sleep(1)
 
-            # pause video
-            util.play_pause(device)
+            
 
-            # click on see more to reveal content
-            try: util.tap_on(device, {'text': 'See more'})
-            except: pass
-
-            # grab xml
-            text_elems = device.find_elements({'text': re.compile('.+')})
+            xml = device.get_xml()
+            text_elems = device.find_elements({'content-desc': re.compile('.+')}, xml)
+            text_elems += device.find_elements({'text': re.compile('.+')}, xml)
 
             # build row
             row = {}
-
-            for el in text_elems:
-
-                row[el['resource-id']] = el['text']
+            for column_id, elem in enumerate(text_elems):
+                key = elem['resource-id']
+                if key.strip() == '':
+                    key = 'col_%s' % column_id
+                text = elem['content-desc']
+                if text.strip() == '':
+                    text = elem['text']
+                if text == '':
+                    continue
+                row[key] = text
                 
-                # like video if it contains the query needed
-                if el['resource-id']=='com.ss.android.ugc.trill:id/bc5':
-                    text = el['text']
+                if elem['resource-id'] == 'com.google.android.youtube:id/reel_main_title' and classify(query, text):
+                    count += 1
+                    row['Intervened'] = True
+                    row['Intervention'] = intervention
+                    print(text)
 
-                    if classify(query, text):
-                        count += 1
-                        row['Intervened'] = True
-                        row['Intervention'] = intervention
+                    #longtap
+                    device.longtap()
+                    sleep(1)
 
-                        #longtap
-                        device.longtap()
+                    # click on Not intereseted
+                    try: util.tap_on(device, {'text': "Don't recommend this channel"})
+                    except: util.swipe_up(device)
 
-                        # click on Not intereseted
-                        util.tap_on(device, {'text': 'Not interested'})
-                        sleep(1)
-                        
-            # append to training data
             intervention_data.append(row)
 
-            # press on hide to hide content
-            try: util.tap_on(device, {'text': 'Hide'})
-            except: pass
+            # swipe to next video only if did not intervene here
+            if not row.get('Intervened'):
+                util.swipe_up(device)
+            
 
-            # swipe to next
-            util.swipe_up(device)
+        return intervention_data
+        
+
     except Exception as e:
         if e == "'NoneType' object is not subscriptable":
             restart_app(device)
 
     return intervention_data
 
+def Not_Interested_Unfollow(device,query, intervention):
+    try:
+        if intervention=="Not_Interested_Unfollow":
+            pass 
+        
+        restart_app(device)
+        intervention_data = []
+        count = 0
+
+        # for 1000 videos
+        for iter in tqdm(range(1000)):
+
+            # restart every 50 videos to refresh app state
+            if iter % 20 == 0:
+                restart_app(device)
+                util.tap_on(device, attrs={'content-desc': 'Shorts', 'class': "android.widget.Button"})
+
+            # break if success
+            if count > PARAMETERS["intervention_phase_n"]:
+                print('breaking',count)
+                break
+        
+            # check for any flow disruptions first
+            #util.check_disruptions(device)
+            
+            # watch short for a certain time
+            sleep(1)
+
+            
+
+            xml = device.get_xml()
+            text_elems = device.find_elements({'content-desc': re.compile('.+')}, xml)
+            text_elems += device.find_elements({'text': re.compile('.+')}, xml)
+
+            # build row
+            row = {}
+            for column_id, elem in enumerate(text_elems):
+                key = elem['resource-id']
+                if key.strip() == '':
+                    key = 'col_%s' % column_id
+                text = elem['content-desc']
+                if text.strip() == '':
+                    text = elem['text']
+                if text == '':
+                    continue
+                row[key] = text
+                
+                if elem['resource-id'] == 'com.google.android.youtube:id/reel_main_title' and classify(query, text):
+                    count += 1
+                    row['Intervened'] = True
+                    row['Intervention'] = intervention
+                    print(text)
+
+                    #longtap
+                    device.longtap()
+                    sleep(1)
+
+                    # click on Not intereseted
+                    try: util.tap_on(device, {'text': "Don't recommend this channel"})
+                    except: util.swipe_up(device)
+
+            intervention_data.append(row)
+
+            # swipe to next video only if did not intervene here
+            if not row.get('Intervened'):
+                util.swipe_up(device)
+
+                   
+        restart_app(device)
+
+        # press on hide to hide content
+        try: util.tap_on(device, attrs={'content-desc': 'Subscriptions'})
+        except: pass
+
+        try: util.tap_on(device, {'resource-id':"com.google.android.youtube:id/channels_button"})
+        except: pass
+
+        xml = device.get_xml()
+        elems = device.find_elements({'class':"android.view.ViewGroup", "clickable":"true"}, xml)
+        for n in range(1, len(elems), 2):
+            # click bell icon
+            util.tap_on_nth(device, {'class':"android.view.ViewGroup", "clickable":"true"}, n, xml)
+            sleep(1)
+            # click unsubscribe
+            device.tap((300, 1500))
+            sleep(1)
+
+    except Exception as e:
+        if e == "'NoneType' object is not subscriptable":
+            restart_app(device)
+
+    return intervention_data
+
+def Control():
+    pass
+        
+
+    
+
 
 if __name__ == '__main__':
-    args = parse_args()
-    
-    print("Launching emulator...")
-    # device = emulate_new_device(credentials.name)
-    # print("VNC link:", device.get_vnc_link())
-    device = get_connected_devices()[0]
+        args = parse_args()
+        
+        # print("Launching emulator...")
+        # device = emulate_new_device(credentials.name)
+        device = get_connected_devices()[args.d]
 
 
-    try:
+    # try:
         print("Configuring keyboard...")
         configure_keyboard(device)
 
-        print("Training Phase 2...", util.timestamp())
-        training_phase_2_data = training_phase_2(device, args.q)
+        # print("Training Phase 2...", util.timestamp())
+        # training_phase_2_data = training_phase_2(device, args.q)
         
-        print("Testing Phase 1...", util.timestamp())
-        testing_phase_1_data = testing(device)
+        # print("Testing Phase 1...", util.timestamp())
+        # testing_phase_1_data = testing(device)
 
-        print("Saving...", util.timestamp())
-    #     # pd.DataFrame(training_data_phase1).to_csv(f'training_phase_1/{credentials.name}_big.csv', index=False)
-        pd.DataFrame(training_phase_2_data).to_csv(f'training_phase_2/{args.identifier}-{args.q}.csv', index=False)
-        pd.DataFrame(testing_phase_1_data).to_csv(f'testing_phase_1/{args.identifier}-{args.q}.csv', index=False)
+    #     print("Saving...", util.timestamp())
+    # #     # pd.DataFrame(training_data_phase1).to_csv(f'training_phase_1/{credentials.name}_big.csv', index=False)
+    #     pd.DataFrame(training_phase_2_data).to_csv(f'training_phase_2/{args.identifier}-{args.q}.csv', index=False)
+    #     pd.DataFrame(testing_phase_1_data).to_csv(f'testing_phase_1/{args.identifier}-{args.q}.csv', index=False)
+
+
+        if args.i == "Not_Interested":
+       
+            print("Not Interested Only Intervention...", util.timestamp())
+            intervention_data = Not_Interested(device,args.q, args.i)
+            pd.DataFrame(intervention_data).to_csv(f'intervention/{args.q}--{args.i}--{args.n}.csv', index=False)
+        
+        elif args.i == "Unfollow":
+            print("Unfollow Only Intervention...", util.timestamp())
+            intervention_data = Unfollow(device,args.q, args.i)
+            pd.DataFrame(intervention_data).to_csv(f'intervention/{args.q}--{args.i}--{args.n}.csv', index=False)
+
+        elif args.i == "Unfollow_Not_Interested":
+            print("Unfollow then Not Interested Intervention...", util.timestamp())
+            intervention_data = Unfollow_Not_Interested(device,args.q, args.i)
+            pd.DataFrame(intervention_data).to_csv(f'intervention/{args.q}--{args.i}--{args.n}.csv', index=False)
+
+        elif args.i == "Not_Interested_Unfollow":
+            print("Not Interested then Unfollow Intervention...", util.timestamp())
+            intervention_data = Not_Interested_Unfollow(device,args.q, args.i)
+            pd.DataFrame(intervention_data).to_csv(f'intervention/{args.q}--{args.i}--{args.n}.csv', index=False)
         
     #     print("Intervention...", util.timestamp())
     #     intervention_data = Intervention(device,args.q, args.i)
@@ -227,8 +471,8 @@ if __name__ == '__main__':
     #     device.kill_app('com.ss.android.ugc.trill')
     #     device.type_text(26)
 
-    except Exception as e:
-        pass
+    # except Exception as e:
+    #     pass
         # device.screenshot(f'screenshots/{credentials.name}.png')
         # device.destroy()
 
