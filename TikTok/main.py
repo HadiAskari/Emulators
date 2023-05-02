@@ -495,7 +495,9 @@ if __name__ == '__main__':
 
         print("Configuring keyboard...")
         configure_keyboard(device)
-        
+
+        print('Serial', device._Android__device.serial)
+
         input("Continue?")
 
         # print("Training Phase 2...", util.timestamp())

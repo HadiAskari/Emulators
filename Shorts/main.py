@@ -32,7 +32,7 @@ def configure_keyboard(device):
 def restart_app(device):
     device.kill_app('com.google.android.youtube')
     device.launch_app('com.google.android.youtube')
-    sleep(5)
+    sleep(20)
     util.tap_on(device, attrs={'content-desc': 'Shorts', 'class': "android.widget.Button"})
 
 
@@ -69,7 +69,7 @@ def training_phase_2(device, query):
             if text.strip() == '':
                 text = elem['text']
             row[key] = text
-            if classify(query, text):
+            if elem['resource-id'] == 'com.google.android.youtube:id/reel_main_title' and classify(query, text):
                 count += 1
                 if not row.get('liked', False):
                     row['liked'] = True
@@ -425,16 +425,19 @@ if __name__ == '__main__':
         print("Configuring keyboard...")
         configure_keyboard(device)
 
-        # print("Training Phase 2...", util.timestamp())
-        # training_phase_2_data = training_phase_2(device, args.q)
         
-        # print("Testing Phase 1...", util.timestamp())
-        # testing_phase_1_data = testing(device)
+        print('Serial', device._Android__device.serial)
+        input("Continue?")
 
-    #     print("Saving...", util.timestamp())
-    # #     # pd.DataFrame(training_data_phase1).to_csv(f'training_phase_1/{credentials.name}_big.csv', index=False)
-    #     pd.DataFrame(training_phase_2_data).to_csv(f'training_phase_2/{args.identifier}-{args.q}.csv', index=False)
-    #     pd.DataFrame(testing_phase_1_data).to_csv(f'testing_phase_1/{args.identifier}-{args.q}.csv', index=False)
+        print("Training Phase 2...", util.timestamp())
+        training_phase_2_data = training_phase_2(device, args.q)
+        
+        print("Testing Phase 1...", util.timestamp())
+        testing_phase_1_data = testing(device)
+
+        print("Saving...", util.timestamp())
+        pd.DataFrame(training_phase_2_data).to_csv(f'training_phase_2/{args.identifier}-{args.q}.csv', index=False)
+        pd.DataFrame(testing_phase_1_data).to_csv(f'testing_phase_1/{args.identifier}-{args.q}.csv', index=False)
 
 
         if args.i == "Not_Interested":

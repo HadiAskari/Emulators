@@ -44,6 +44,9 @@ def emulate_new_device(name):
 def get_connected_devices():
     return [Android(dev, None, None) for dev in adb_client.devices()]
 
+def get_connected_device(serial):
+    return Android(adb_client.device(serial), None, None)
+
 def get_next_available_port(starting):
     for port in range(starting, starting + 1000):
         with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as sock:

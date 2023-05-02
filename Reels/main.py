@@ -138,10 +138,6 @@ def testing(device):
                 author = desc[:delim].strip()
                 text = desc[delim + 4:].strip()
                 row = { 'text': text, 'author': author }
-
-
-
-
             except:
                 util.swipe_up(device)
                 continue
@@ -292,7 +288,11 @@ if __name__ == '__main__':
 
         print("Configuring keyboard...")
         configure_keyboard(device)
-        
+
+
+        print('Serial', device._Android__device.serial)
+
+        input("Continue?")
         
         # print("Training Phase 2...", util.timestamp())
         # training_phase_2_data = training_phase_2(device, args.q)
