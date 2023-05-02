@@ -437,8 +437,8 @@ if __name__ == '__main__':
         testing_phase_1_data = testing(device)
 
         print("Saving...", util.timestamp())
-        pd.DataFrame(training_phase_2_data).to_csv(f'training_phase_2/{args.identifier}-{args.q}.csv', index=False)
-        pd.DataFrame(testing_phase_1_data).to_csv(f'testing_phase_1/{args.identifier}-{args.q}.csv', index=False)
+        pd.DataFrame(training_phase_2_data).to_csv(f'training_phase_2/{args.q}--{args.i}--{args.n}.csv', index=False)
+        pd.DataFrame(testing_phase_1_data).to_csv(f'testing_phase_1/{args.q}--{args.i}--{args.n}.csv', index=False)
 
 
         if args.i == "Not_Interested":
