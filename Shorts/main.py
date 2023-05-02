@@ -87,7 +87,8 @@ def training_phase_2(device, query):
 
 def testing(device):
     # start testing
-    testing_phase1_data = []    
+    testing_phase1_data = []
+    count = 0
     for iter in tqdm(range(PARAMETERS["testing_phase_n"])):
 
         # restart every 50 videos to refresh app state
