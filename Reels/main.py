@@ -384,6 +384,7 @@ def Unfollow_Not_Interested(device,query, intervention):
 
         intervention_data.append(row)
 
+        print(row)
         if not row.get('Intervened', False):
             util.swipe_up(device)
     
