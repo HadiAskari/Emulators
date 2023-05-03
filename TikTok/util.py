@@ -46,6 +46,9 @@ def tap_on_all(device, attrs, xml=None):
     for items in elem:
         coords = device.get_coordinates(items)
         device.tap(coords)
+    if not elem:
+        return -1 
+    else: return 1
 
 def check_disruptions(device):
     xml = device.get_xml()

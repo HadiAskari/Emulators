@@ -124,29 +124,29 @@ def testing(device):
         if iter % 20 == 0:
             restart_app(device)
 
-            try:
-                util.tap_on(device, {'content-desc': 'Comment'})
-                elem = device.find_element({'resource-id': 'com.instagram.android:id/row_comment_textview_comment'})
-            except:
-                util.swipe_up(device)
-                continue
-
-            # build row
-            try:
-                desc = elem['content-desc']
-                delim = desc.index('said')
-                author = desc[:delim].strip()
-                text = desc[delim + 4:].strip()
-                row = { 'text': text, 'author': author }
-            except:
-                util.swipe_up(device)
-                continue
-
-            # append to training data
-            testing_phase1_data.append(row)
-
-            util.swipe_down(device)
+        try:
+            util.tap_on(device, {'content-desc': 'Comment'})
+            elem = device.find_element({'resource-id': 'com.instagram.android:id/row_comment_textview_comment'})
+        except:
             util.swipe_up(device)
+            continue
+
+        # build row
+        try:
+            desc = elem['content-desc']
+            delim = desc.index('said')
+            author = desc[:delim].strip()
+            text = desc[delim + 4:].strip()
+            row = { 'text': text, 'author': author }
+        except:
+            util.swipe_up(device)
+            continue
+
+        # append to training data
+        testing_phase1_data.append(row)
+
+        util.swipe_down(device)
+        util.swipe_up(device)
   
     return testing_phase1_data
 
@@ -198,24 +198,25 @@ def Not_Interested(device,query, intervention):
 
             
 
-            # grab top comment for description
-            util.tap_on(device, {'content-desc': 'Comment'})
-            elem = device.find_element({'resource-id': 'com.instagram.android:id/row_comment_textview_comment'})
+        # grab top comment for description
+        util.tap_on(device, {'content-desc': 'Comment'})
+        elem = device.find_element({'resource-id': 'com.instagram.android:id/row_comment_textview_comment'})
 
-            util.swipe_down(device)
+        util.swipe_down(device)
 
-            sleep(1)
+        sleep(1)
 
-            # build row
-            desc = elem['content-desc']
-            delim = desc.index('said')
-            author = desc[:delim].strip()
-            text = desc[delim + 4:].strip()
-            row['author'] = author
-            row['text'] = text
+        # build row
+        desc = elem['content-desc']
+        delim = desc.index('said')
+        author = desc[:delim].strip()
+        text = desc[delim + 4:].strip()
+        row['author'] = author
+        row['text'] = text
 
 
-            #if classify(query, text):
+        if classify(query, text):
+            print("Here")
             print(text)
             count += 1
             row['Intervened'] = True
@@ -231,11 +232,11 @@ def Not_Interested(device,query, intervention):
             except: 
                 util.swipe_up(device)
                 
-
+        # util.swipe_up(device)
 
         intervention_data.append(row)
 
-        if not row.get('Intervened'):
+        if not row.get('Intervened', False):
             util.swipe_up(device)
     
 
@@ -274,7 +275,244 @@ def Unfollow(device,query, intervention):
     restart_app(device)
     
     return intervention_data
+
+def Unfollow_Not_Interested(device,query, intervention):
+    restart_app(device)
+    
+    #click profile
+    try: util.tap_on(device, attrs={'content-desc': 'Profile'})
+    except: pass
+
+
+    #click following
+    try: util.tap_on(device, attrs={'resource-id': 'com.instagram.android:id/row_profile_header_following_container'})
+    except: pass
+
+   
+    while True:
+        
+        res=util.tap_on_all(device, 
+        {
+            'resource-id':"com.instagram.android:id/follow_list_row_large_follow_button",
+            'text': 'Following'
+        })
+        util.swipe_up(device)
+
+        if res==-1:
+            break
+
+
+
+    intervention_data = []
+    count = 0
+
+    # for 1000 videos
+    for iter in tqdm(range(1000)):
+
+        # restart every 50 videos to refresh app state
+        if iter % 20 == 0:
+            restart_app(device)
+
+        # break if success
+        if count > PARAMETERS["intervention_phase_n"]:
+            print('breaking',count)
+            break
+    
+        # check for any flow disruptions first
+        #util.check_disruptions(device)
+        
+        # watch short for a certain time
+        sleep(1)
+
+        
+
+        xml = device.get_xml()
+        text_elems = device.find_elements({'content-desc': re.compile('.+')}, xml)
+        text_elems += device.find_elements({'text': re.compile('.+')}, xml)
+
+        #util.swipe_down(device)
+
+        # build row
+        row = {}
+        for column_id, elem in enumerate(text_elems):
+            key = elem['resource-id']
+            if key.strip() == '':
+                key = 'col_%s' % column_id
+            text = elem['content-desc']
+            if text.strip() == '':
+                text = elem['text']
+            if text == '':
+                continue
+            row[key] = text
+
             
+
+        # grab top comment for description
+        util.tap_on(device, {'content-desc': 'Comment'})
+        elem = device.find_element({'resource-id': 'com.instagram.android:id/row_comment_textview_comment'})
+
+        util.swipe_down(device)
+
+        sleep(1)
+
+        # build row
+        desc = elem['content-desc']
+        delim = desc.index('said')
+        author = desc[:delim].strip()
+        text = desc[delim + 4:].strip()
+        row['author'] = author
+        row['text'] = text
+
+
+        if classify(query, text):
+            print(text)
+            count += 1
+            row['Intervened'] = True
+            row['Intervention'] = intervention
+
+            device.tap((650,1275))
+            sleep(1)
+
+            try: 
+                util.tap_on(device, {'text': "Not Interested"})
+                device.longtap()
+                #util.swipe_down(device)
+            except: 
+                util.swipe_up(device)
+                
+
+
+        intervention_data.append(row)
+
+        
+        if not row.get('Intervened', False):
+            util.swipe_up(device)
+    
+
+    return intervention_data
+
+def Not_Interested_Unfollow(device,query, intervention):
+    intervention_data = []
+    count = 0
+
+    # for 1000 videos
+    for iter in tqdm(range(1000)):
+
+        # restart every 50 videos to refresh app state
+        if iter % 20 == 0:
+            restart_app(device)
+
+        # break if success
+        if count > PARAMETERS["intervention_phase_n"]:
+            print('breaking',count)
+            break
+    
+        # check for any flow disruptions first
+        #util.check_disruptions(device)
+        
+        # watch short for a certain time
+        sleep(1)
+
+        
+
+        xml = device.get_xml()
+        text_elems = device.find_elements({'content-desc': re.compile('.+')}, xml)
+        text_elems += device.find_elements({'text': re.compile('.+')}, xml)
+
+        #util.swipe_down(device)
+
+        # build row
+        row = {}
+        for column_id, elem in enumerate(text_elems):
+            key = elem['resource-id']
+            if key.strip() == '':
+                key = 'col_%s' % column_id
+            text = elem['content-desc']
+            if text.strip() == '':
+                text = elem['text']
+            if text == '':
+                continue
+            row[key] = text
+
+            
+
+        # grab top comment for description
+        util.tap_on(device, {'content-desc': 'Comment'})
+        elem = device.find_element({'resource-id': 'com.instagram.android:id/row_comment_textview_comment'})
+
+        util.swipe_down(device)
+
+        sleep(1)
+
+        # build row
+        desc = elem['content-desc']
+        delim = desc.index('said')
+        author = desc[:delim].strip()
+        text = desc[delim + 4:].strip()
+        row['author'] = author
+        row['text'] = text
+
+        
+
+        if classify(query, text):
+            print(text)
+            count += 1
+            row['Intervened'] = True
+            row['Intervention'] = intervention
+
+            device.tap((650,1275))
+            sleep(1)
+
+            try: 
+                util.tap_on(device, {'text': "Not Interested"})
+                device.longtap()
+                #util.swipe_down(device)
+            except: 
+                util.swipe_up(device)
+                
+
+
+        intervention_data.append(row)
+
+        if not row.get('Intervened'):
+            util.swipe_up(device)
+
+    
+    restart_app(device)
+    
+    #click profile
+    try: util.tap_on(device, attrs={'content-desc': 'Profile'})
+    except: pass
+
+
+    #click following
+    try: util.tap_on(device, attrs={'resource-id': 'com.instagram.android:id/row_profile_header_following_container'})
+    except: pass
+
+   
+
+    while True:
+        
+        res=util.tap_on_all(device, 
+        {
+            'resource-id':"com.instagram.android:id/follow_list_row_large_follow_button",
+            'text': 'Following'
+        })
+        util.swipe_up(device)
+
+        if res==-1:
+            break
+    
+    restart_app(device)
+
+
+    return intervention_data
+
+
+def Control():
+    pass
+
+
 if __name__ == '__main__':
     args = parse_args()
     
@@ -325,13 +563,17 @@ if __name__ == '__main__':
             intervention_data = Not_Interested_Unfollow(device,args.q, args.i)
             pd.DataFrame(intervention_data).to_csv(f'intervention/{args.q}--{args.i}--{args.n}.csv', index=False)
 
+        elif args.i == "Control":
+            print("Control Intervention")
+            intervention_data = Control(device,args.q, args.i)
+            pd.DataFrame(intervention_data).to_csv(f'intervention/{args.q}--{args.i}--{args.n}.csv', index=False)
         
-    #     print("Testing Phase 2... ", util.timestamp())
-    #     testing_phase_2_data = testing(device)
+        print("Testing Phase 2... ", util.timestamp())
+        testing_phase_2_data = testing(device)
 
     #     print("Saving...")
     #     pd.DataFrame(intervention_data).to_csv(f'intervention/{args.q}_{credentials.name}.csv', index=False)
-    #     pd.DataFrame(testing_phase_2_data).to_csv(f'testing_phase_2/{args.q}_{credentials.name}.csv', index=False)
+        pd.DataFrame(testing_phase_2_data).to_csv(f'testing_phase_2/{args.q}--{args.i}--{args.n}.csv', index=False)
 
     #     device.kill_app('com.ss.android.ugc.trill')
     #     device.type_text(26)
