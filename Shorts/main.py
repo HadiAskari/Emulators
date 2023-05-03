@@ -461,16 +461,23 @@ if __name__ == '__main__':
             print("Not Interested then Unfollow Intervention...", util.timestamp())
             intervention_data = Not_Interested_Unfollow(device,args.q, args.i)
             pd.DataFrame(intervention_data).to_csv(f'intervention/{args.q}--{args.i}--{args.n}.csv', index=False)
+
+        elif args.i == "Control":
+            print("Control Intervention")
+            intervention_data = Control(device,args.q, args.i)
+            pd.DataFrame(intervention_data).to_csv(f'intervention/{args.q}--{args.i}--{args.n}.csv', index=False)
         
     #     print("Intervention...", util.timestamp())
     #     intervention_data = Intervention(device,args.q, args.i)
         
-    #     print("Testing Phase 2... ", util.timestamp())
-    #     testing_phase_2_data = testing(device)
+        print("Testing Phase 2... ", util.timestamp())
+        testing_phase_2_data = testing(device)
 
     #     print("Saving...")
     #     pd.DataFrame(intervention_data).to_csv(f'intervention/{args.q}_{credentials.name}.csv', index=False)
     #     pd.DataFrame(testing_phase_2_data).to_csv(f'testing_phase_2/{args.q}_{credentials.name}.csv', index=False)
+        
+        pd.DataFrame(testing_phase_2_data).to_csv(f'testing_phase_2/{args.q}--{args.i}--{args.n}.csv', index=False)
 
     #     device.kill_app('com.ss.android.ugc.trill')
     #     device.type_text(26)

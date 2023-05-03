@@ -124,29 +124,29 @@ def testing(device):
         if iter % 20 == 0:
             restart_app(device)
 
-            try:
-                util.tap_on(device, {'content-desc': 'Comment'})
-                elem = device.find_element({'resource-id': 'com.instagram.android:id/row_comment_textview_comment'})
-            except:
-                util.swipe_up(device)
-                continue
-
-            # build row
-            try:
-                desc = elem['content-desc']
-                delim = desc.index('said')
-                author = desc[:delim].strip()
-                text = desc[delim + 4:].strip()
-                row = { 'text': text, 'author': author }
-            except:
-                util.swipe_up(device)
-                continue
-
-            # append to training data
-            testing_phase1_data.append(row)
-
-            util.swipe_down(device)
+        try:
+            util.tap_on(device, {'content-desc': 'Comment'})
+            elem = device.find_element({'resource-id': 'com.instagram.android:id/row_comment_textview_comment'})
+        except:
             util.swipe_up(device)
+            continue
+
+        # build row
+        try:
+            desc = elem['content-desc']
+            delim = desc.index('said')
+            author = desc[:delim].strip()
+            text = desc[delim + 4:].strip()
+            row = { 'text': text, 'author': author }
+        except:
+            util.swipe_up(device)
+            continue
+
+        # append to training data
+        testing_phase1_data.append(row)
+
+        util.swipe_down(device)
+        util.swipe_up(device)
   
     return testing_phase1_data
 
@@ -158,7 +158,7 @@ def Not_Interested(device,query, intervention):
     count = 0
 
     # for 1000 videos
-    for iter in tqdm(range(3)):
+    for iter in tqdm(range(1000)):
 
         # restart every 50 videos to refresh app state
         if iter % 20 == 0:
@@ -204,7 +204,7 @@ def Not_Interested(device,query, intervention):
 
         util.swipe_down(device)
 
-        sleep(5)
+        sleep(1)
 
         # build row
         desc = elem['content-desc']
@@ -307,7 +307,7 @@ def Unfollow_Not_Interested(device,query, intervention):
     count = 0
 
     # for 1000 videos
-    for iter in tqdm(range(3)):
+    for iter in tqdm(range(1000)):
 
         # restart every 50 videos to refresh app state
         if iter % 20 == 0:
@@ -347,44 +347,44 @@ def Unfollow_Not_Interested(device,query, intervention):
 
             
 
-            # grab top comment for description
-            util.tap_on(device, {'content-desc': 'Comment'})
-            elem = device.find_element({'resource-id': 'com.instagram.android:id/row_comment_textview_comment'})
+        # grab top comment for description
+        util.tap_on(device, {'content-desc': 'Comment'})
+        elem = device.find_element({'resource-id': 'com.instagram.android:id/row_comment_textview_comment'})
 
-            util.swipe_down(device)
+        util.swipe_down(device)
 
+        sleep(1)
+
+        # build row
+        desc = elem['content-desc']
+        delim = desc.index('said')
+        author = desc[:delim].strip()
+        text = desc[delim + 4:].strip()
+        row['author'] = author
+        row['text'] = text
+
+
+        if classify(query, text):
+            print(text)
+            count += 1
+            row['Intervened'] = True
+            row['Intervention'] = intervention
+
+            device.tap((650,1275))
             sleep(1)
 
-            # build row
-            desc = elem['content-desc']
-            delim = desc.index('said')
-            author = desc[:delim].strip()
-            text = desc[delim + 4:].strip()
-            row['author'] = author
-            row['text'] = text
-
-
-            if classify(query, text):
-                print(text)
-                count += 1
-                row['Intervened'] = True
-                row['Intervention'] = intervention
-
-                device.tap((650,1275))
-                sleep(1)
-
-                try: 
-                    util.tap_on(device, {'text': "Not Interested"})
-                    device.longtap()
-                    #util.swipe_down(device)
-                except: 
-                    util.swipe_up(device)
+            try: 
+                util.tap_on(device, {'text': "Not Interested"})
+                device.longtap()
+                #util.swipe_down(device)
+            except: 
+                util.swipe_up(device)
                 
 
 
         intervention_data.append(row)
 
-        print(row)
+        
         if not row.get('Intervened', False):
             util.swipe_up(device)
     
@@ -396,7 +396,7 @@ def Not_Interested_Unfollow(device,query, intervention):
     count = 0
 
     # for 1000 videos
-    for iter in tqdm(range(3)):
+    for iter in tqdm(range(1000)):
 
         # restart every 50 videos to refresh app state
         if iter % 20 == 0:
@@ -436,39 +436,39 @@ def Not_Interested_Unfollow(device,query, intervention):
 
             
 
-            # grab top comment for description
-            util.tap_on(device, {'content-desc': 'Comment'})
-            elem = device.find_element({'resource-id': 'com.instagram.android:id/row_comment_textview_comment'})
+        # grab top comment for description
+        util.tap_on(device, {'content-desc': 'Comment'})
+        elem = device.find_element({'resource-id': 'com.instagram.android:id/row_comment_textview_comment'})
 
-            util.swipe_down(device)
+        util.swipe_down(device)
 
-            sleep(5)
+        sleep(1)
 
-            # build row
-            desc = elem['content-desc']
-            delim = desc.index('said')
-            author = desc[:delim].strip()
-            text = desc[delim + 4:].strip()
-            row['author'] = author
-            row['text'] = text
+        # build row
+        desc = elem['content-desc']
+        delim = desc.index('said')
+        author = desc[:delim].strip()
+        text = desc[delim + 4:].strip()
+        row['author'] = author
+        row['text'] = text
 
+        
+
+        if classify(query, text):
             print(text)
+            count += 1
+            row['Intervened'] = True
+            row['Intervention'] = intervention
 
-            if classify(query, text):
-                print(text)
-                count += 1
-                row['Intervened'] = True
-                row['Intervention'] = intervention
+            device.tap((650,1275))
+            sleep(1)
 
-                device.tap((650,1275))
-                sleep(1)
-
-                try: 
-                    util.tap_on(device, {'text': "Not Interested"})
-                    device.longtap()
-                    #util.swipe_down(device)
-                except: 
-                    util.swipe_up(device)
+            try: 
+                util.tap_on(device, {'text': "Not Interested"})
+                device.longtap()
+                #util.swipe_down(device)
+            except: 
+                util.swipe_up(device)
                 
 
 
@@ -490,16 +490,17 @@ def Not_Interested_Unfollow(device,query, intervention):
     except: pass
 
    
-    while True:
-        try:
-            util.tap_on_all(device, 
-            {
-                'resource-id':"com.instagram.android:id/follow_list_row_large_follow_button",
-                'text': 'Following'
-            })
-            util.swipe_up(device)
 
-        except:
+    while True:
+        
+        res=util.tap_on_all(device, 
+        {
+            'resource-id':"com.instagram.android:id/follow_list_row_large_follow_button",
+            'text': 'Following'
+        })
+        util.swipe_up(device)
+
+        if res==-1:
             break
     
     restart_app(device)
