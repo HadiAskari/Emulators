@@ -198,6 +198,8 @@ def Unfollow(device,query, intervention):
 
     intervention_data = []
 
+    sleep(10)
+
     # press on hide to hide content
     try: util.tap_on(device, attrs={'content-desc': 'Subscriptions'})
     except: pass
@@ -465,12 +467,12 @@ if __name__ == '__main__':
     #     print("Intervention...", util.timestamp())
     #     intervention_data = Intervention(device,args.q, args.i)
         
-    #     print("Testing Phase 2... ", util.timestamp())
-    #     testing_phase_2_data = testing(device)
+        print("Testing Phase 2... ", util.timestamp())
+        testing_phase_2_data = testing(device)
 
-    #     print("Saving...")
+        print("Saving...")
     #     pd.DataFrame(intervention_data).to_csv(f'intervention/{args.q}_{credentials.name}.csv', index=False)
-    #     pd.DataFrame(testing_phase_2_data).to_csv(f'testing_phase_2/{args.q}_{credentials.name}.csv', index=False)
+        pd.DataFrame(testing_phase_2_data).to_csv(f'testing_phase_2/{args.q}--{args.i}--{args.n}.csv', index=False)
 
     #     device.kill_app('com.ss.android.ugc.trill')
     #     device.type_text(26)
