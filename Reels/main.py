@@ -198,39 +198,39 @@ def Not_Interested(device,query, intervention):
 
             
 
-            # grab top comment for description
-            util.tap_on(device, {'content-desc': 'Comment'})
-            elem = device.find_element({'resource-id': 'com.instagram.android:id/row_comment_textview_comment'})
+        # grab top comment for description
+        util.tap_on(device, {'content-desc': 'Comment'})
+        elem = device.find_element({'resource-id': 'com.instagram.android:id/row_comment_textview_comment'})
 
-            util.swipe_down(device)
+        util.swipe_down(device)
 
-            sleep(5)
+        sleep(5)
 
-            # build row
-            desc = elem['content-desc']
-            delim = desc.index('said')
-            author = desc[:delim].strip()
-            text = desc[delim + 4:].strip()
-            row['author'] = author
-            row['text'] = text
+        # build row
+        desc = elem['content-desc']
+        delim = desc.index('said')
+        author = desc[:delim].strip()
+        text = desc[delim + 4:].strip()
+        row['author'] = author
+        row['text'] = text
 
 
-            if classify(query, text):
-                print("Here")
-                print(text)
-                count += 1
-                row['Intervened'] = True
-                row['Intervention'] = intervention
+        if classify(query, text):
+            print("Here")
+            print(text)
+            count += 1
+            row['Intervened'] = True
+            row['Intervention'] = intervention
 
-                device.tap((650,1275))
-                sleep(1)
+            device.tap((650,1275))
+            sleep(1)
 
-                try: 
-                    util.tap_on(device, {'text': "Not Interested"})
-                    device.longtap()
-                    #util.swipe_down(device)
-                except: 
-                    util.swipe_up(device)
+            try: 
+                util.tap_on(device, {'text': "Not Interested"})
+                device.longtap()
+                #util.swipe_down(device)
+            except: 
+                util.swipe_up(device)
                 
         # util.swipe_up(device)
 
