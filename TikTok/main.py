@@ -532,8 +532,8 @@ if __name__ == '__main__':
             intervention_data = Not_Interested_Unfollow(device,args.q, args.i)
             pd.DataFrame(intervention_data).to_csv(f'intervention/{args.q}--{args.i}--{args.n}.csv', index=False)
 
-        # elif args.i == "Control":
-        #     pass
+        elif args.i == "Control":
+            pass
 
 
         

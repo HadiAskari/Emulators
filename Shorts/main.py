@@ -466,8 +466,9 @@ if __name__ == '__main__':
 
         elif args.i == "Control":
             print("Control Intervention")
-            intervention_data = Control(device,args.q, args.i)
-            pd.DataFrame(intervention_data).to_csv(f'intervention/{args.q}--{args.i}--{args.n}.csv', index=False)
+            # intervention_data = Control(device,args.q, args.i)
+            # pd.DataFrame(intervention_data).to_csv(f'intervention/{args.q}--{args.i}--{args.n}.csv', index=False)
+            pass
         
         # print("Intervention...", util.timestamp())
         # intervention_data = Intervention(device,args.q, args.i)
