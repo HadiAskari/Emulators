@@ -55,7 +55,7 @@ def training_phase_2(device, query):
     count = 0
     # start training
     training_phase_2_data = []
-    for iter in tqdm(range(10)):
+    for iter in tqdm(range(1000)):
 
         # restart every 20 videos to refresh app state
         if iter % 20 == 0:
@@ -521,8 +521,8 @@ if __name__ == '__main__':
  
 
     try:
-        # print("Installing APKs...")
-        # install_apks(device)
+        print("Installing APKs...")
+        install_apks(device)
 
         print("Configuring keyboard...")
         configure_keyboard(device)
@@ -532,15 +532,15 @@ if __name__ == '__main__':
 
         input("Continue?")
         
-        # print("Training Phase 2...", util.timestamp())
-        # training_phase_2_data = training_phase_2(device, args.q)
+        print("Training Phase 2...", util.timestamp())
+        training_phase_2_data = training_phase_2(device, args.q)
         
-        # print("Testing Phase 1...", util.timestamp())
-        # testing_phase_1_data = testing(device)
+        print("Testing Phase 1...", util.timestamp())
+        testing_phase_1_data = testing(device)
 
-        # print("Saving...", util.timestamp())
-        # pd.DataFrame(training_phase_2_data).to_csv(f'training_phase_2/{args.q}--{args.i}--{args.n}.csv', index=False)
-        # pd.DataFrame(testing_phase_1_data).to_csv(f'testing_phase_1/Insta_snatlanshine.csv', index=False)
+        print("Saving...", util.timestamp())
+        pd.DataFrame(training_phase_2_data).to_csv(f'training_phase_2/{args.q}--{args.i}--{args.n}.csv', index=False)
+        pd.DataFrame(testing_phase_1_data).to_csv(f'testing_phase_1/Insta_snatlanshine.csv', index=False)
         
         if args.i == "Not_Interested":
        
